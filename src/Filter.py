@@ -78,6 +78,10 @@ class Filter:
 			M = cv2.moments(item) # Moments matrix of the contour, everything the contour is
 			# Draw Contours
 			cv2.drawContours(image2, [item], 0, color, 2) # Draws the contour on the image
+
+			# Area
+			A = cv2.contourArea(item)
+
 			try:
 				# Center X
 				cx = int(M['m10']/M['m00'])
@@ -87,8 +91,7 @@ class Filter:
 				# Area  is 0
 				cx = 0
 				cy = 0
-			# Area
-			A = cv2.contourArea(item)
+				A = 1
 
 			# Perimeter
 			P = cv2.arcLength(item, True)
@@ -152,7 +155,7 @@ class Filter:
 				hull_area = cv2.contourArea(hull)
 				solidity = float(A)/hull_area
 			except:
-				solidity = float(A)
+				solidity = float(A)/A
 
 			# Equivalent Diameter
 			eD = np.sqrt(4*A/np.pi)

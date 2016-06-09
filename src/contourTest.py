@@ -21,7 +21,17 @@ pics = [
 "img/balloon1.jpeg",
 "img/balloon2.jpeg",
 "img/balloon3.jpeg",
-"img/balloon4.jpeg"
+"img/balloon4.jpeg",
+"img/imgres.jpg",
+"img/imgres-1.jpg",
+"img/imgres-4.jpg",
+"img/images-1.jpg",
+"img/images-3.jpg",
+"img/images-4.jpg",
+"img/images-5.jpg",
+"img/images.jpg",
+"img/imgres-2.jpg",
+"img/imgres-3"
 ]
 
 consts = {
@@ -38,7 +48,7 @@ consts = {
 	'minExtent' : 0.6,
 	'maxExtent' : 0.9,
 	'minSolidity' : 0.490,
-	'maxSolidity' : 100.0,
+	'maxSolidity' : 1000.0,
 	'minMean' : 0.0,
 	'maxMean' : 255.0,
 	'minVerticies' : 40,
