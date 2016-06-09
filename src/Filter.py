@@ -3,68 +3,81 @@ import numpy as np
 import cv2
 
 class Filter:
-
+	# Class to handle ALL dealings with any and all thresholds and images, works with video as well
 	def __init__(self, image, display=True, consts={}):
+		# Image (as an object, NOT a filename)
+		# Display: Boolean to display unnescessary details
+		# Consts: Constants that are nescessary for filtering the correct contours
 		self.image = image
 		self.original = image
 		self.moments = []
-		self.contours = None
-		self.saveable = si(image)
+		self.contours = None # Sets contours later
+		self.saveable = si(image) # Creates SaveableImage object
 		self.display = display
 		self.consts = consts
-		self.allContours = []
-		self.acceptedContours = []
+		self.allContours = [] # List of all contours and what they passed in terms of the filter
+		self.acceptedContours = [] # List of the indexes of the contours that passed the filter
+	def blur(self):
+		# Blurs the image, as well as makes it grayscale
+		grayimg = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY) # Converts image to grayscale
+		blur = cv2.GaussianBlur(grayimg,(5,5),0) # Blurs the image 5x5 Averaging Gaussian
+		return blur # Returns blurred image
+	def setContours(self, contours):
+		self.contours = contours # Sets class contours to the contours passed to it
 	def getContours(self, approx, threshLow=127, threshHigh=255, finalThreshVal=0):
-		blur = self.blur()
-		r, t = cv2.threshold(blur,threshLow,threshHigh,finalThreshVal)
-		thresh = t
-		cv2.imshow('thresh', thresh)
-		i, cont, h = cv2.findContours(t, cv2.RETR_TREE, approx)
-		self.setContours(cont)
-		return r, thresh, i, cont, h
+		# Approx: How the contours should be approximated as: See 'contourTest.py' for more details
+		# ThreshLow: Pixel must be above this to pass threshold
+		# ThreshHigh: Pixel must be below this to pass threshold
+		# FinalThreshVal: Type of thresholding to be done (OTSU VS BINARY) See 'contourTest.py' for more details
+		blur = self.blur() # Blurs the image
+		r, t = cv2.threshold(blur,threshLow,threshHigh,finalThreshVal) # Standard threshold
+		thresh = np.copy(t) # Creates a copy of the threshold to do contour drawing on it
+		i, cont, h = cv2.findContours(t, cv2.RETR_TREE, approx) # Finds contours of the filtered result
+		self.setContours(cont) # Sets the contours
+		return r, thresh, i, cont, h # Returns Ret, Thresholded Image, Image with contours, Hiearchy
 	def adaptiveGet(self, approx, threshHigh=255, size=11, c=2, filterType=cv2.ADAPTIVE_THRESH_MEAN_C):
-		blur = self.blur()
-		t = cv2.adaptiveThreshold(blur,threshHigh,filterType,cv2.THRESH_BINARY,size,c)
-		thresh = np.copy(t)
-		cv2.imshow('thresh', thresh)
-		i, cont, h = cv2.findContours(t, cv2.RETR_TREE, approx)
-		self.setContours(cont)
-		return thresh, i, cont, h
+		# Approx: How the contours should be approximated as: See 'contourTest.py' for more details
+		# ThreshHigh: High threshold ending value
+		# Size: Size of the adaptive threshold
+		# C: Amount toi subtract from the average of the pixels when thresholding is complete
+		# FilterType: Type of filter to use: See 'contourTest.py' for more details
+		blur = self.blur() # Blurs the image
+		t = cv2.adaptiveThreshold(blur,threshHigh,filterType,cv2.THRESH_BINARY,size,c) # Does Adaptive threshold on the image
+		thresh = np.copy(t) # Copies threshold result
+		i, cont, h = cv2.findContours(t, cv2.RETR_TREE, approx) # Finds contours on threshold result
+		self.setContours(cont) # Sets contours
+		return thresh, i, cont, h # Returns Thresholded Image, Image with contours, Hiearchy
 	def rgbGet(self, approx, consts={}):
-		# [131,202,9,90] --> B
-		blur = cv2.GaussianBlur(self.image, (5,5), 0)
-		B, G, R = cv2.split(blur)
-		B[B > consts['rgbBlueMax']] = 0
-		B[B < consts['rgbBlueMin']] = 0
-		G[B == 0] = 0
-		R[B == 0] = 0
-		B[B > 0] = 255
+		# Approx: How the contours should be approximated as: See 'contourTest.py' for more details
+		# Consts: Dictionary of constants for the RGB filter: See 'contourTest.py' for more detials
+		blur = cv2.GaussianBlur(self.image, (5,5), 0) # Blurs without converting to gray image
+		B, G, R = cv2.split(blur) # Splices the image into the Blue Green and Red pixel values
+		B[B > consts['rgbBlueMax']] = 0 # Blue pixels above the threshold turn to 0
+		B[B < consts['rgbBlueMin']] = 0 # Blue pixels below the threshold turn to 0
+		G[B == 0] = 0 # Green pixels that share the same index as Blue pixels that are 0 also become 0
+		R[B == 0] = 0 # Same with Red
+		B[B > 0] = 255 # Remaining Pixels get converted to White (255,255,255)
 		G[B > 0] = 255
 		R[B > 0] = 255
-		end = cv2.merge([B, G, R])
-		grayimg = cv2.cvtColor(end, cv2.COLOR_BGR2GRAY)
-		thresh = np.copy(grayimg)
-		i, cont, h = cv2.findContours(grayimg, cv2.RETR_TREE, approx)
-		self.setContours(cont)
-		return thresh, i, cont, h
-	def setContours(self, contours):
-		self.contours = contours
-	def blur(self):
-		grayimg = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
-		blur = cv2.GaussianBlur(grayimg,(5,5),0)
-		return blur
+		end = cv2.merge([B, G, R]) # Merges results back together into one image
+		grayimg = cv2.cvtColor(end, cv2.COLOR_BGR2GRAY) # Converts to grayscale binary image (so contours works on it)
+		thresh = np.copy(grayimg) # Copies the Binary image
+		i, cont, h = cv2.findContours(grayimg, cv2.RETR_TREE, approx) # Finds the contours on the binary image after the RGB filter
+		self.setContours(cont) # ...
+		return thresh, i, cont, h # ...
 	def run(self, Image, color=(0,255,0)):
+		# Image: image object to pass through to the function: allows filter to work with video frames
+		# Color: Color to draw contours in (not any of the other contour related things, however)
 		# RETURNS ORIGINAL IMAGE WITH CONTOURS THAT PASS THE FILTER DRAWN IN
 		# FILTER:
-		self.original = np.copy(Image)
-		#self.original = Image
-		index = 0
-		for item in self.contours:
-			image2 = np.copy(self.original)
+		self.original = np.copy(Image) # Sets the original image to the image just passed through
+		index = 0 # Resets index to 0
+		for item in self.contours: # For each contour
+			image2 = np.copy(self.original) # Copies the original image (image2 is image that everything gets drawn on)
 			# MOMENTS
-			M = cv2.moments(item)
+			M = cv2.moments(item) # Moments matrix of the contour, everything the contour is
 			# Draw Contours
-			cv2.drawContours(image2, [item], 0, color, 2)
+			cv2.drawContours(image2, [item], 0, color, 2) # Draws the contour on the image
 			try:
 				# Center X
 				cx = int(M['m10']/M['m00'])
@@ -72,7 +85,6 @@ class Filter:
 				cy = int(M['m01']/M['m00'])
 			except ZeroDivisionError:
 				# Area  is 0
-				#IGNORE ME
 				cx = 0
 				cy = 0
 			# Area
@@ -81,7 +93,7 @@ class Filter:
 			# Perimeter
 			P = cv2.arcLength(item, True)
 
-			# Actual convex
+			# Actual convex polygon
 			hull = cv2.convexHull(item,returnPoints=False)
 
 			# Is Convex?
@@ -117,7 +129,6 @@ class Filter:
 				angle = 0
 				MA = 1
 				ma = 1
-				pass
 			try:
 				# Line
 				rows, cols = image2.shape[:2]
@@ -126,6 +137,7 @@ class Filter:
 				righty = int(((cols-x)*vy/vx)+y)
 				image2 = cv2.line(image2, (cols-1,righty),(0,lefty),(0,255,0),2)
 			except OverflowError:
+				# Line exists outside of the image, numbers are too small
 				pass
 
 			# Aspect Ratio
@@ -140,7 +152,7 @@ class Filter:
 				hull_area = cv2.contourArea(hull)
 				solidity = float(A)/hull_area
 			except:
-				solidity = 1.0
+				solidity = float(A)
 
 			# Equivalent Diameter
 			eD = np.sqrt(4*A/np.pi)
@@ -192,17 +204,22 @@ class Filter:
 				'rightMost': rightMost,
 				'topMost': topMost,
 				'bottomMost': bottomMost
-				})
+				}) # The dictionary of all the contour information- most time consuming, but is not nescessary
+			# Not all of the information is currently used, jsut there for reference
+
 			if self.display:
+				# Don't display anything because video feeds make it annoyingly slow (when displaying stuff in this loop)
 				pass
 				#self.saveable.showRaw("Item "+str(index))
 				#self.saveable.testKey()
-			index += 1
+			index += 1 # Increments index of contour (only needed for display purposes, deprecated)
 
 		# BEGIN FILTER TEST
 		acceptances = []
-		index = 0
-		for item in self.moments:
+		index = 0 # Resets index to 0
+		for item in self.moments: # For all of the contour information, check if they pass the conditionals with the constants passed in the initialization:
+			# Check self.consts and current item to see if it passes the filtering threshold for each value
+			# Add an item representing that to 'contourStuff' if it does
 			contourStuff = []
 			if item['A'] < self.consts['maxArea']: 
 				contourStuff.insert(0,"GOOD maxArea\t")
@@ -252,38 +269,37 @@ class Filter:
 				contourStuff.insert(22,"GOOD maxRatioHeighttoSize\t")
 			if item['h'] / float(image2.shape[1]) > self.consts['minRatioHeighttoSize']:
 				contourStuff.insert(23,"GOOD minRatioHeighttoSize\t")
-			acceptance = len(contourStuff)
-			acceptances.append(acceptance)
-			if acceptance >= self.consts['tolerance']:
+			acceptance = len(contourStuff) # Acceptance calculated by length of 'contourStuff', how much stuff got put into it
+			acceptances.append(acceptance) # All Possibilities are appended to acceptances
+			if acceptance >= self.consts['tolerance']: # If the acceptance exceeds the tolerance, accept the contour
 				# CONTOUR PASSES FILTER
 				if self.display: print "ACCEPTED CONTOUR "+str(index)
 				self.acceptedContours.append(index)
-			contourStuff.insert(0,index)
+			contourStuff.insert(0,index) # Insert the index (readability)
 			self.allContours.append(contourStuff)
-			index += 1
+			index += 1 # Indecrement the index
 		for item in self.allContours:
-			if self.display: print "\nContour: ", item[0]
+			if self.display: print "\nContour: ", item[0] # Prints out the contour information, how much each contour matched
 			for item2 in item:
 				if self.display: print item2,
 		image2 = np.copy(self.original)
 		print 
-		print acceptances
+		print acceptances # Print the acceptance values of all the contours
 		#image2 = cv2.imread(filename)
 		for item in self.acceptedContours:
-			cv2.drawContours(image2, [self.contours[item]], -1, color, 3)
+			cv2.drawContours(image2, [self.contours[item]], -1, color, 3) # Draw the accepted contours
 			try:
-				defects = cv2.convexityDefects(self.contours[item],self.moments[item]['hull'])
+				defects = cv2.convexityDefects(self.contours[item],self.moments[item]['hull']) # Try to draw the convex hull
 			except:
-				defects = cv2.convexityDefects(self.contours[item],cv2.convexHull(self.contours[item],returnPoints=False))
+				defects = cv2.convexityDefects(self.contours[item],cv2.convexHull(self.contours[item],returnPoints=False)) # Otherwise, tries with a reobtaining of the hull
 			try:
-				for i in range(defects.shape[0]):
+				for i in range(defects.shape[0]): # Tries to draw the defects of the convex hull
 				    s,e,f,d = defects[i,0]
 				    start = tuple(self.contours[item][s][0])
 				    end = tuple(self.contours[item][e][0])
 				    far = tuple(self.contours[item][f][0])
 				    cv2.line(image2,start,end,[0,255,255],2)
 			    #cv2.circle(image2,far,5,[255,0,255],-1)
-			except AttributeError:
-				print "CAUGHT ONE!"
-				continue
-		return image2
+			except AttributeError: # If it fails print it out
+				print "Attribute Failure!"
+		return image2 # Returns image with accepted contours drawn on it
