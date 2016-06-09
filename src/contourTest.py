@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from SaveableImage import SaveableImage as si
 from Filter import Filter as f
+import Constants
 
 """
 Contour Finder + Filter Tester
@@ -31,78 +32,20 @@ pics = [
 "img/images-5.jpg",
 "img/images.jpg",
 "img/imgres-2.jpg",
-"img/imgres-3"
+"img/imgres-3.jpg",
+"img/images-6.jpg"
 ]
 
-consts = {
-	'minArea' : 5,
-	'maxArea' : 20000,
-	'minPerimeter' : 5,
-	'maxPerimeter' : 3000,
-	'minWidth' : 2,
-	'maxWidth' : 600,
-	'minHeight' : 3,
-	'maxHeight' : 300,
-	'minRatio' : 0.0,
-	'maxRatio' : 1000.0,
-	'minExtent' : 0.27,
-	'maxExtent' : 0.9,
-	'minSolidity' : 0.390,
-	'maxSolidity' : 1000.0,
-	'minMean' : 0.0,
-	'maxMean' : 255.0,
-	'minVerticies' : 10,
-	'maxVerticies' : 10200,
-	'minAngle' : -360.0,
-	'maxAngle' : 360.0,
-	'minRatioWidthtoSize' : 0.02,
-	'maxRatioWidthtoSize' : 0.4,
-	'minRatioHeighttoSize' : 0.02,
-	'maxRatioHeighttoSize' : 0.4,
-	'tolerance' : 24 # Number of above conditions to be met for successful contour observation
-}
+consts = Constants.PHOTOS_CONTOUR_FILTER_CONSTANTS_1
 # GOAL: TO HAVE MULTIPLE FILTER OBJECTS CORRESPONDING TO DIFFERENT DISTANCES: HAVE SOME IDEA
 # OF HOW HIGH THE ROCKET IS AND USE THE FILTERS THAT MATCH THE HEIGHT (OTHERWISE, IT MIGHT BE
-# VIRTUALLY IMPOSSIBLE TO HAVE A FILTER 'THAT FITS ALL')
+# VIRTUALLY IMPOSSIBLE TO HAVE A FILTER THAT 'FITS ALL')
 
-rgbConsts = {
-	'rgbRedMin' : 104,
-	'rgbRedMax' : 255,
-	'rgbGreenMin' : 0,
-	'rgbGreenMax' : 101,
-	'rgbBlueMin' : 0,
-	'rgbBlueMax' : 130
-}
-"""
-allVals = {
-	'cx': cx,
-	'cy': cy,
-	'A': A,
-	'P': P,
-	'k': k,
-	'w': w,
-	'h': h,
-	'hull': hull,
-	'ratio': aspect_ratio,
-	'extent': extent,
-	'solidity': solidity,
-	'eD': eD,
-	'angle': angle,
-	'majorAxis': MA,
-	'minorAxis': ma,
-	'mask': mask,
-	'pixelPoints': pixelPoints,
-	'maxVal': max_val,
-	'maxLocation': max_loc,
-	'minVal': min_val,
-	'minLocation': min_loc,
-	'mean': mean,
-	'leftMost': leftMost,
-	'rightMost': rightMost,
-	'topMost': topMost,
-	'bottomMost', bottomMost
-}
-"""
+rgbConsts = Constants.PHOTOS_RGB_FILTER_CONSTANTS_1
+
+consts2 = Constants.PHOTOS_CONTOUR_FILTER_CONSTANTS_2
+
+rgbConsts2 = Constants.PHOTOS_RGB_FILTER_CONSTANTS_2
 
 
 filterLow = 115 # Binary Threshold Low Value
@@ -126,6 +69,7 @@ approx = cv2.CHAIN_APPROX_SIMPLE # Contour mappings: Map to shapes or dont map a
 
 for item in pics:
 	filt = f(cv2.imread(item),consts=consts, display=True) # Creates a filter object with the image, constants and displayability
+	filt2 = f(cv2.imread(item), consts=consts2, display=True) # Another filter for second attempt
 	#grayimg = cv2.cvtColor(img.image, cv2.COLOR_BGR2GRAY)
 	#ret, thresh = cv2.threshold(grayimg,127,255,0)
 	#blur = cv2.GaussianBlur(grayimg,(5,5),0)
@@ -144,8 +88,12 @@ for item in pics:
 		cv2.waitKey(0)
 	elif filterTypeNum == 2: # If using RGB thresholding
 		filtered, imagey, contours, h = filt.rgbGet(approx, rgbConsts) # Uses RGB filtering through the filter object
+		filtered2, imagey2, contours2, h2 = filt2.rgbGet(approx, rgbConsts2)
 		img.image = filtered
 		img.showRaw("threshed")
+		cv2.waitKey(0)
+		img.image = filtered2
+		img.showRaw("threshed through filter 2")
 		cv2.waitKey(0)
 	else: # Otherwise, do normal thresholding (binary)
 		ret, filtered, imagey, contours, h = filt.getContours(approx, filterLow, filterHigh, filterType) # Gets the ret as well from the normal thresholding from the filter object
@@ -158,3 +106,6 @@ for item in pics:
 	img.image = filt.run(im) # Filter.run(image) runs the filter which spits out the contours that pass the tolerance level of the constants above, see 'Filter.py' for more details
 	img.showRaw("final")
 	img.testKey() # Allows the final image to be saved, asks if you want to save it before quitting
+	img.image = filt2.run(im)
+	img.showRaw("final through filter 2")
+	img.testKey()
