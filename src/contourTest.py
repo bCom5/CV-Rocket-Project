@@ -35,39 +35,43 @@ pics = [
 ]
 
 consts = {
-	'minArea' : 55,
+	'minArea' : 5,
 	'maxArea' : 20000,
-	'minPerimeter' : 20,
+	'minPerimeter' : 5,
 	'maxPerimeter' : 3000,
-	'minWidth' : 20,
+	'minWidth' : 2,
 	'maxWidth' : 600,
-	'minHeight' : 25,
+	'minHeight' : 3,
 	'maxHeight' : 300,
 	'minRatio' : 0.0,
 	'maxRatio' : 1000.0,
-	'minExtent' : 0.6,
+	'minExtent' : 0.27,
 	'maxExtent' : 0.9,
-	'minSolidity' : 0.490,
+	'minSolidity' : 0.390,
 	'maxSolidity' : 1000.0,
 	'minMean' : 0.0,
 	'maxMean' : 255.0,
-	'minVerticies' : 40,
+	'minVerticies' : 10,
 	'maxVerticies' : 10200,
 	'minAngle' : -360.0,
 	'maxAngle' : 360.0,
-	'minRatioWidthtoSize' : 0.05,
+	'minRatioWidthtoSize' : 0.02,
 	'maxRatioWidthtoSize' : 0.4,
-	'minRatioHeighttoSize' : 0.033,
+	'minRatioHeighttoSize' : 0.02,
 	'maxRatioHeighttoSize' : 0.4,
 	'tolerance' : 24 # Number of above conditions to be met for successful contour observation
 }
+# GOAL: TO HAVE MULTIPLE FILTER OBJECTS CORRESPONDING TO DIFFERENT DISTANCES: HAVE SOME IDEA
+# OF HOW HIGH THE ROCKET IS AND USE THE FILTERS THAT MATCH THE HEIGHT (OTHERWISE, IT MIGHT BE
+# VIRTUALLY IMPOSSIBLE TO HAVE A FILTER 'THAT FITS ALL')
+
 rgbConsts = {
-	'rgbRedMin' : 105,
+	'rgbRedMin' : 104,
 	'rgbRedMax' : 255,
 	'rgbGreenMin' : 0,
 	'rgbGreenMax' : 101,
 	'rgbBlueMin' : 0,
-	'rgbBlueMax' : 136
+	'rgbBlueMax' : 130
 }
 """
 allVals = {

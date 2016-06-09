@@ -47,6 +47,11 @@ class Filter:
 		i, cont, h = cv2.findContours(t, cv2.RETR_TREE, approx) # Finds contours on threshold result
 		self.setContours(cont) # Sets contours
 		return thresh, i, cont, h # Returns Thresholded Image, Image with contours, Hiearchy
+	def bgrConvert(self, inputArray, conditional, otherArray1, otherArray2, val):
+		inputArray[inputArray > conditional] = val # Remaining Pixels get converted to White (255,255,255)
+		otherArray1[inputArray > conditional] = val
+		otherArray2[inputArray > conditional] = val
+		return inputArray, otherArray1, otherArray2
 	def rgbGet(self, approx, consts={}):
 		# Approx: How the contours should be approximated as: See 'contourTest.py' for more details
 		# Consts: Dictionary of constants for the RGB filter: See 'contourTest.py' for more detials
@@ -56,9 +61,17 @@ class Filter:
 		B[B < consts['rgbBlueMin']] = 0 # Blue pixels below the threshold turn to 0
 		G[B == 0] = 0 # Green pixels that share the same index as Blue pixels that are 0 also become 0
 		R[B == 0] = 0 # Same with Red
-		B[B > 0] = 255 # Remaining Pixels get converted to White (255,255,255)
-		G[B > 0] = 255
-		R[B > 0] = 255
+		G[G > consts['rgbGreenMax']] = 0 # Green pixels above and below threshold get reset as well
+		G[G < consts['rgbGreenMin']] = 0
+		B[G == 0] = 0 # same idexes of the other arrays also get set to 0
+		R[G == 0] = 0
+		R[R > consts['rgbRedMax']] = 0
+		R[R < consts['rgbRedMin']] = 0
+		B[R == 0] = 0
+		G[R == 0] = 0
+		B, G, R = self.bgrConvert(B, 0, G, R, 255)
+		G, B, R = self.bgrConvert(G, 0, B, R, 255)
+		R, B, G = self.bgrConvert(R, 0, B, G, 255)
 		end = cv2.merge([B, G, R]) # Merges results back together into one image
 		grayimg = cv2.cvtColor(end, cv2.COLOR_BGR2GRAY) # Converts to grayscale binary image (so contours works on it)
 		thresh = np.copy(grayimg) # Copies the Binary image
@@ -286,8 +299,9 @@ class Filter:
 			for item2 in item:
 				if self.display: print item2,
 		image2 = np.copy(self.original)
-		print 
-		print acceptances # Print the acceptance values of all the contours
+		if self.display:
+			print 
+			print acceptances # Print the acceptance values of all the contours
 		#image2 = cv2.imread(filename)
 		for item in self.acceptedContours:
 			cv2.drawContours(image2, [self.contours[item]], -1, color, 3) # Draw the accepted contours
@@ -304,5 +318,5 @@ class Filter:
 				    cv2.line(image2,start,end,[0,255,255],2)
 			    #cv2.circle(image2,far,5,[255,0,255],-1)
 			except AttributeError: # If it fails print it out
-				print "Attribute Failure!"
+				if self.display: print "Attribute Failure!"
 		return image2 # Returns image with accepted contours drawn on it
