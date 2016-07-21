@@ -1,0 +1,3 @@
+#!/bin/bash
+sudo cp /home/pi/*.py /home/pi/Documents/RocketProject/cv/src
+sudo cp /home/pi/*.pyc /home/pi/Documents/RocketProject/cv/src
