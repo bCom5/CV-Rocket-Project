@@ -41,12 +41,36 @@ camera.framerate = 60
 capture = picamera.array.PiRGBArray(camera, size=(640,480))
 filt = f(cv2.imread('img/balloon.jpg'), consts=Constants.VIDEOS_CONTOUR_FILTER_CONSTANTS_1, display=False)
 time.sleep(0.1)
-for i in range(10):
-	filt.image = cv2.imread('img/balloon.jpg')
-	f, i, c, h = filt.rgbGet(cv2.CHAIN_APPROX_SIMPLE, Constants.VIDEOS_RGB_FILTER_CONSTANTS_1)
-	coolImage = filt.run(filt.image)
-	cv2.imshow('frame', coolImage)
-	cv2.waitKey(0)
+imgs = [
+"img/balloon.jpg",
+"img/balloon2.jpg",
+"img/balloon3.jpg",
+"img/balloon1.jpeg",
+"img/balloon2.jpeg",
+"img/balloon3.jpeg",
+"img/balloon4.jpeg",
+"img/imgres.jpg",
+"img/imgres-1.jpg",
+"img/imgres-4.jpg",
+"img/images-1.jpg",
+"img/images-3.jpg",
+"img/images-4.jpg",
+"img/images-5.jpg",
+"img/images.jpg",
+"img/imgres-2.jpg",
+"img/imgres-3.jpg",
+"img/images-6.jpg"
+]
+
+for img in imgs:
+	for i in range(10):
+		filt.image = cv2.imread(img)
+		f, i, c, h = filt.rgbGet(cv2.CHAIN_APPROX_SIMPLE, Constants.VIDEOS_RGB_FILTER_CONSTANTS_1)
+		coolImage = filt.run(filt.image)
+		cv2.imshow('frame', coolImage)
+		cv2.waitKey(0)
+
+	filt.confidence.confidence = [0]
 
 
 for frame in camera.capture_continuous(capture, format='bgr', use_video_port=True):

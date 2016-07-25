@@ -78,10 +78,10 @@ class Filter:
 				self.confidence.imageVals = [x, y]
 			else:
 				x, y, w, h = self.confidence.getxy(-25)
-				print x, y
-				print self.confidence.imageVals
 				x += self.confidence.imageVals[0]
+				if x < 0: x = 0
 				y += self.confidence.imageVals[1]
+				if y < 0: y = 0
 				print "USED CONFIDENCE ALREADY: TRYING TO FIX LOCATION OF CONFIDENCE"
 				print x, y, w, h
 				blur = cv2.blur(self.image[y:y+h, x:x+w], (5,5))
@@ -377,7 +377,6 @@ class Filter:
 		if len(self.confidence.confidence) > 0:
 			self.confidence.confidence = [self.confidence.confidence[target]]
 			self.confidence.confidenceRect = [self.confidence.confidenceRect[target]]
-			print self.confidence.confidenceRect
 		else:
 			self.confidence.confidence = [0]
 		for item in self.acceptedContours:
