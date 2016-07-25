@@ -90,6 +90,13 @@ class Filter:
 				blur = self.image[y:y+h, x:x+w]
 		#blur = cv2.GaussianBlur(self.image, (5,5), 0) # Blurs without converting to gray image
 		self.image = blur
+
+		lower = np.array([consts['rgbBlueMin'], consts['rgbGreenMin'], consts['rgbRedMin']])
+		upper = np.array([consts['rgbBlueMax'], consts['rgbGreenMax'], consts['rgbRedMax']])
+
+		end = cv2.inRange(self.image, lower, upper)
+
+		"""
 		B, G, R = cv2.split(blur) # Splices the image into the Blue Green and Red pixel values
 		B[B > consts['rgbBlueMax']] = 0 # Blue pixels above the threshold turn to 0
 		B[B < consts['rgbBlueMin']] = 0 # Blue pixels below the threshold turn to 0
@@ -107,9 +114,12 @@ class Filter:
 		G, B, R = self.bgrConvert(G, 0, B, R, 255)
 		R, B, G = self.bgrConvert(R, 0, B, G, 255)
 		end = cv2.merge([B, G, R]) # Merges results back together into one image
-		grayimg = cv2.cvtColor(end, cv2.COLOR_BGR2GRAY) # Converts to grayscale binary image (so contours works on it)
-		thresh = np.copy(grayimg) # Copies the Binary image
-		cont, h = cv2.findContours(grayimg, cv2.RETR_TREE, approx) # Finds the contours on the binary image after the RGB filter
+		"""
+
+		#grayimg = cv2.cvtColor(end, cv2.COLOR_BGR2GRAY) # Converts to grayscale binary image (so contours works on it)
+		#thresh = np.copy(grayimg)
+		thresh = np.copy(end) # Copies the Binary image
+		cont, h = cv2.findContours(end, cv2.RETR_TREE, approx) # Finds the contours on the binary image after the RGB filter
 		i = None
 		self.setContours(cont) # ...
 		return thresh, i, cont, h # ...
@@ -118,6 +128,7 @@ class Filter:
 			# CONTOUR PASSES FILTER
 			if self.display: print "ACCEPTED CONTOUR "+str(index)
 			self.acceptedContours.append(index)
+		self.moments.append({'A': w*h})
 		self.confidence.confidence.append(float(acceptance/self.consts['tolerance'])*100)
 		self.confidence.confidenceRect.append((x, y, w, h))
 	def run(self, Image, color=(0,255,0)):
@@ -373,10 +384,13 @@ class Filter:
 				maxConf = self.confidence.confidence[index]
 				target = index
 			elif self.confidence.confidence[index] == maxConf:
-				if self.moments[index]['A'] > self.moments[target]['A']:
-					# TAKE THE LARGER ONE
-					maxConf = self.confidence.confidence[index]
-					target = index
+				try:
+					if self.moments[index]['A'] > self.moments[target]['A']:
+						# TAKE THE LARGER ONE
+						maxConf = self.confidence.confidence[index]
+						target = index
+				except IndexError:
+					continue
 		if len(self.confidence.confidence) > 0:
 			self.confidence.confidence = [self.confidence.confidence[target]]
 			self.confidence.confidenceRect = [self.confidence.confidenceRect[target]]
