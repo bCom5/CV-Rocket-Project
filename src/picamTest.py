@@ -41,6 +41,14 @@ camera.framerate = 60
 capture = picamera.array.PiRGBArray(camera, size=(640,480))
 filt = f(cv2.imread('img/balloon.jpg'), consts=Constants.VIDEOS_CONTOUR_FILTER_CONSTANTS_1, display=False)
 time.sleep(0.1)
+for i in range(10):
+	filt.image = cv2.imread('img/balloon.jpg')
+	f, i, c, h = filt.rgbGet(cv2.CHAIN_APPROX_SIMPLE, Constants.VIDEOS_RGB_FILTER_CONSTANTS_1)
+	coolImage = filt.run(filt.image)
+	cv2.imshow('frame', coolImage)
+	cv2.waitKey(0)
+
+
 for frame in camera.capture_continuous(capture, format='bgr', use_video_port=True):
 	e1 = cv2.getTickCount() # Starttime
 	filt.image = frame.array

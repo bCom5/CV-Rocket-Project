@@ -1,5 +1,6 @@
 from SaveableImage import SaveableImage as si
 from Confidence import Confidence
+import Constants
 import numpy as np
 import cv2
 
@@ -65,16 +66,27 @@ class Filter:
 		# Consts: Dictionary of constants for the RGB filter: See 'contourTest.py' for more detials
 		if self.confidence.confidence[0] < self.confidence.tolerance:
 			# fail, it should check the whole image
-			blur = cv2.GaussianBlur(self.image, (5,5), 0) # Blurs without converting to gray image
+			blur = cv2.blur(self.image, (5,5)) # Blurs without converting to gray image
+			self.confidence.usingConfidence = False
+			self.confidence.imageVals = []
 		else:
-			x = self.confidence.confidenceRect[0][0]
-			y = self.confidence.confidenceRect[0][1]
-			w = self.confidence.confidenceRect[0][2]
-			h = self.confidence.confidenceRect[0][3]
-			print x, y, w, h
-			print self.image.shape
-			blur = cv2.blur(self.image[y:y+h, x:x+w], (5,5))
+			if not self.confidence.usingConfidence:
+				x, y, w, h = self.confidence.getxy(0)
+				print x, y, w, h
+				blur = cv2.blur(self.image[y:y+h, x:x+w], (5,5))
+				self.confidence.usingConfidence = True
+				self.confidence.imageVals = [x, y]
+			else:
+				x, y, w, h = self.confidence.getxy(-25)
+				print x, y
+				print self.confidence.imageVals
+				x += self.confidence.imageVals[0]
+				y += self.confidence.imageVals[1]
+				print "USED CONFIDENCE ALREADY: TRYING TO FIX LOCATION OF CONFIDENCE"
+				print x, y, w, h
+				blur = cv2.blur(self.image[y:y+h, x:x+w], (5,5))
 		#blur = cv2.GaussianBlur(self.image, (5,5), 0) # Blurs without converting to gray image
+		self.image = blur
 		B, G, R = cv2.split(blur) # Splices the image into the Blue Green and Red pixel values
 		B[B > consts['rgbBlueMax']] = 0 # Blue pixels above the threshold turn to 0
 		B[B < consts['rgbBlueMin']] = 0 # Blue pixels below the threshold turn to 0
@@ -365,10 +377,11 @@ class Filter:
 		if len(self.confidence.confidence) > 0:
 			self.confidence.confidence = [self.confidence.confidence[target]]
 			self.confidence.confidenceRect = [self.confidence.confidenceRect[target]]
+			print self.confidence.confidenceRect
 		else:
 			self.confidence.confidence = [0]
 		for item in self.acceptedContours:
-			cv2.drawContours(image2, [self.contours[item]], -1, color, 3) # Draw the accepted contours
+			cv2.drawContours(self.image, [self.contours[item]], -1, color, 3) # Draw the accepted contours
 			# try:
 			# 	defects = cv2.convexityDefects(self.contours[item],self.moments[item]['hull']) # Try to draw the convex hull
 			# except:

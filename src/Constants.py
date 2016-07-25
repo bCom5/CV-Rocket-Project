@@ -78,9 +78,9 @@ VIDEOS_CONTOUR_FILTER_CONSTANTS_1 = {
 	'minAngle' : -360.0,
 	'maxAngle' : 360.0,
 	'minRatioWidthtoSize' : 0.02,
-	'maxRatioWidthtoSize' : 0.4,
+	'maxRatioWidthtoSize' : 0.9,
 	'minRatioHeighttoSize' : 0.02,
-	'maxRatioHeighttoSize' : 0.4,
+	'maxRatioHeighttoSize' : 0.9,
 	'tolerance' : 24 # Number of above conditions to be met for successful contour observation
 }
 PHOTOS_RGB_FILTER_CONSTANTS_1 = {
@@ -110,4 +110,6 @@ VIDEOS_RGB_FILTER_CONSTANTS_1 = {
 	'rgbBlueMin' : 0,
 	'rgbBlueMax' : 130
 }
-CONFIDENCE_TOLERANCE = 80 # 0-100
+CONFIDENCE_TOLERANCE = 60 # 0-100
+CONFIDENCE_WINDOW_WIDTH = 50
+CONFIDENCE_WINDOW_HEIGHT = 50
