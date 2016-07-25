@@ -66,14 +66,16 @@ class Filter:
 		# Consts: Dictionary of constants for the RGB filter: See 'contourTest.py' for more detials
 		if self.confidence.confidence[0] < self.confidence.tolerance:
 			# fail, it should check the whole image
-			blur = cv2.blur(self.image, (5,5)) # Blurs without converting to gray image
+			#blur = cv2.blur(self.image, (5,5)) # Blurs without converting to gray image
+			blur = self.image
 			self.confidence.usingConfidence = False
 			self.confidence.imageVals = []
 		else:
 			if not self.confidence.usingConfidence:
 				x, y, w, h = self.confidence.getxy(0)
 				print x, y, w, h
-				blur = cv2.blur(self.image[y:y+h, x:x+w], (5,5))
+				#blur = cv2.blur(self.image[y:y+h, x:x+w], (5,5))
+				blur = self.image[y:y+h, x:x+w]
 				self.confidence.usingConfidence = True
 				self.confidence.imageVals = [x, y]
 			else:
@@ -84,7 +86,8 @@ class Filter:
 				if y < 0: y = 0
 				print "USED CONFIDENCE ALREADY: TRYING TO FIX LOCATION OF CONFIDENCE"
 				print x, y, w, h
-				blur = cv2.blur(self.image[y:y+h, x:x+w], (5,5))
+				#blur = cv2.blur(self.image[y:y+h, x:x+w], (5,5))
+				blur = self.image[y:y+h, x:x+w]
 		#blur = cv2.GaussianBlur(self.image, (5,5), 0) # Blurs without converting to gray image
 		self.image = blur
 		B, G, R = cv2.split(blur) # Splices the image into the Blue Green and Red pixel values
