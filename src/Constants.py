@@ -55,6 +55,34 @@ PHOTOS_CONTOUR_FILTER_CONSTANTS_2 = {
 	'maxRatioHeighttoSize' : 0.25,
 	'tolerance' : 24 # Number of above conditions to be met for successful contour observation
 }
+VIDEOS_CONTOUR_FILTER_CONSTANTS_1 = {
+# CLOSE FILTER
+	'minArea' : 5,
+	'maxArea' : 20000,
+	'minPerimeter' : 5,
+	'maxPerimeter' : 3000,
+	'minWidth' : 2,
+	'maxWidth' : 600,
+	'minHeight' : 3,
+	'maxHeight' : 300,
+	'minRatio' : 0.0,
+	'maxRatio' : 1000.0,
+	'minExtent' : 0.27,
+	'maxExtent' : 0.9,
+	'minSolidity' : 0.390,
+	'maxSolidity' : 1000.0,
+	'minMean' : 0.0,
+	'maxMean' : 255.0,
+	'minVerticies' : 10,
+	'maxVerticies' : 10200,
+	'minAngle' : -360.0,
+	'maxAngle' : 360.0,
+	'minRatioWidthtoSize' : 0.02,
+	'maxRatioWidthtoSize' : 0.4,
+	'minRatioHeighttoSize' : 0.02,
+	'maxRatioHeighttoSize' : 0.4,
+	'tolerance' : 24 # Number of above conditions to be met for successful contour observation
+}
 PHOTOS_RGB_FILTER_CONSTANTS_1 = {
 # CLOSE FILTER
 	'rgbRedMin' : 104,
@@ -73,3 +101,13 @@ PHOTOS_RGB_FILTER_CONSTANTS_2 = {
 	'rgbBlueMin' : 0,
 	'rgbBlueMax' : 170
 }
+VIDEOS_RGB_FILTER_CONSTANTS_1 = {
+# CLOSE FILTER
+	'rgbRedMin' : 104,
+	'rgbRedMax' : 255,
+	'rgbGreenMin' : 0,
+	'rgbGreenMax' : 101,
+	'rgbBlueMin' : 0,
+	'rgbBlueMax' : 130
+}
+CONFIDENCE_TOLERANCE = 80 # 0-100

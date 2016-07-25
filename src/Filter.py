@@ -1,4 +1,5 @@
 from SaveableImage import SaveableImage as si
+from Confidence import Confidence
 import numpy as np
 import cv2
 
@@ -17,6 +18,7 @@ class Filter:
 		self.consts = consts
 		self.allContours = [] # List of all contours and what they passed in terms of the filter
 		self.acceptedContours = [] # List of the indexes of the contours that passed the filter
+		self.confidence = Confidence()
 	def blur(self):
 		# Blurs the image, as well as makes it grayscale
 		grayimg = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY) # Converts image to grayscale
@@ -32,7 +34,12 @@ class Filter:
 		blur = self.blur() # Blurs the image
 		r, t = cv2.threshold(blur,threshLow,threshHigh,finalThreshVal) # Standard threshold
 		thresh = np.copy(t) # Creates a copy of the threshold to do contour drawing on it
-		i, cont, h = cv2.findContours(t, cv2.RETR_TREE, approx) # Finds contours of the filtered result
+		#i, cont, h = cv2.findContours(t, cv2.RETR_TREE, approx) # Finds contours of the filtered result
+		# 3.0.0 ^
+		# 2.x.x V
+		cont, h = cv2.findContours(t, cv2.RETR_TREE, approx)
+		i = None
+
 		self.setContours(cont) # Sets the contours
 		return r, thresh, i, cont, h # Returns Ret, Thresholded Image, Image with contours, Hiearchy
 	def adaptiveGet(self, approx, threshHigh=255, size=11, c=2, filterType=cv2.ADAPTIVE_THRESH_MEAN_C):
@@ -44,7 +51,8 @@ class Filter:
 		blur = self.blur() # Blurs the image
 		t = cv2.adaptiveThreshold(blur,threshHigh,filterType,cv2.THRESH_BINARY,size,c) # Does Adaptive threshold on the image
 		thresh = np.copy(t) # Copies threshold result
-		i, cont, h = cv2.findContours(t, cv2.RETR_TREE, approx) # Finds contours on threshold result
+		cont, h = cv2.findContours(t, cv2.RETR_TREE, approx) # Finds contours on threshold result
+		i = None
 		self.setContours(cont) # Sets contours
 		return thresh, i, cont, h # Returns Thresholded Image, Image with contours, Hiearchy
 	def bgrConvert(self, inputArray, conditional, otherArray1, otherArray2, val):
@@ -55,7 +63,18 @@ class Filter:
 	def rgbGet(self, approx, consts={}):
 		# Approx: How the contours should be approximated as: See 'contourTest.py' for more details
 		# Consts: Dictionary of constants for the RGB filter: See 'contourTest.py' for more detials
-		blur = cv2.GaussianBlur(self.image, (5,5), 0) # Blurs without converting to gray image
+		if self.confidence.confidence[0] < self.confidence.tolerance:
+			# fail, it should check the whole image
+			blur = cv2.GaussianBlur(self.image, (5,5), 0) # Blurs without converting to gray image
+		else:
+			x = self.confidence.confidenceRect[0][0]
+			y = self.confidence.confidenceRect[0][1]
+			w = self.confidence.confidenceRect[0][2]
+			h = self.confidence.confidenceRect[0][3]
+			print x, y, w, h
+			print self.image.shape
+			blur = cv2.blur(self.image[y:y+h, x:x+w], (5,5))
+		#blur = cv2.GaussianBlur(self.image, (5,5), 0) # Blurs without converting to gray image
 		B, G, R = cv2.split(blur) # Splices the image into the Blue Green and Red pixel values
 		B[B > consts['rgbBlueMax']] = 0 # Blue pixels above the threshold turn to 0
 		B[B < consts['rgbBlueMin']] = 0 # Blue pixels below the threshold turn to 0
@@ -75,7 +94,8 @@ class Filter:
 		end = cv2.merge([B, G, R]) # Merges results back together into one image
 		grayimg = cv2.cvtColor(end, cv2.COLOR_BGR2GRAY) # Converts to grayscale binary image (so contours works on it)
 		thresh = np.copy(grayimg) # Copies the Binary image
-		i, cont, h = cv2.findContours(grayimg, cv2.RETR_TREE, approx) # Finds the contours on the binary image after the RGB filter
+		cont, h = cv2.findContours(grayimg, cv2.RETR_TREE, approx) # Finds the contours on the binary image after the RGB filter
+		i = None
 		self.setContours(cont) # ...
 		return thresh, i, cont, h # ...
 	def run(self, Image, color=(0,255,0)):
@@ -83,14 +103,16 @@ class Filter:
 		# Color: Color to draw contours in (not any of the other contour related things, however)
 		# RETURNS ORIGINAL IMAGE WITH CONTOURS THAT PASS THE FILTER DRAWN IN
 		# FILTER:
-		self.original = np.copy(Image) # Sets the original image to the image just passed through
+		# self.original = np.copy(Image) # Sets the original image to the image just passed through
 		index = 0 # Resets index to 0
+		image2 = Image
+		self.acceptedContours = []
+		self.moments = []
 		for item in self.contours: # For each contour
-			image2 = np.copy(self.original) # Copies the original image (image2 is image that everything gets drawn on)
 			# MOMENTS
 			M = cv2.moments(item) # Moments matrix of the contour, everything the contour is
 			# Draw Contours
-			cv2.drawContours(image2, [item], 0, color, 2) # Draws the contour on the image
+			# cv2.drawContours(image2, [item], 0, color, 2) # Draws the contour on the image
 
 			# Area
 			A = cv2.contourArea(item)
@@ -110,35 +132,42 @@ class Filter:
 			P = cv2.arcLength(item, True)
 
 			# Actual convex polygon
-			hull = cv2.convexHull(item,returnPoints=False)
+			hull = cv2.convexHull(item,returnPoints=True)
 
 			# Is Convex?
 			k = cv2.isContourConvex(item)
 
 			# Normal Bounding Rect
 			x, y, w, h = cv2.boundingRect(item)
-			cv2.rectangle(image2, (x,y), (x+w,y+h), (0,255,0), 2)
+			#cv2.rectangle(image2, (x,y), (x+w,y+h), (0,255,0), 2)
 
 			# Angled Rect
+			"""
 			rect = cv2.minAreaRect(item)
 			box = cv2.boxPoints(rect)
 			box = np.int0(box)
-			cv2.drawContours(image2,[box], 0, (255,0,0), 2)
+			cv2.drawContours(image2, [box], 0, (255,0,0), 2)
+			"""
 
 			# Circle
-			(x,y), radius = cv2.minEnclosingCircle(item)
-			center = (int(x),int(y))
-			radius = int(radius)
-			image2 = cv2.circle(image2, center, radius, (0,255,255), 2)
+			# (x,y), radius = cv2.minEnclosingCircle(item)
+			# center = (int(x),int(y))
+			# radius = int(radius)
+			# image2 = cv2.circle(image2, center, radius, (0,255,255), 2)
 
 			try:
 				# Ellipse
 
-				ellipse = cv2.fitEllipse(item)
-				image2 = cv2.ellipse(image2, ellipse, (255,255,0), 2)
+				if item.shape[0] > 5:
+					ellipse = cv2.fitEllipse(item)
+					#image2 = cv2.ellipse(image2, ellipse, (255,255,0), 2)
 
-				# Orientation
-				(x,y), (MA,ma), angle = cv2.fitEllipse(item)
+					# Orientation
+					(ex,ey), (MA,ma), angle = cv2.fitEllipse(item)
+				else:
+					angle = 0
+					MA = 1
+					ma = 1
 
 			except:
 				# NOT FIVE OR MORE POINTS
@@ -147,11 +176,12 @@ class Filter:
 				ma = 1
 			try:
 				# Line
-				rows, cols = image2.shape[:2]
-				[vx, vy, x, y] = cv2.fitLine(item, cv2.DIST_L2,0,0.01,0.01)
-				lefty = int((-x*vy/vx) + y)
-				righty = int(((cols-x)*vy/vx)+y)
-				image2 = cv2.line(image2, (cols-1,righty),(0,lefty),(0,255,0),2)
+				pass
+				# rows, cols = image2.shape[:2]
+				# [vx, vy, x, y] = cv2.fitLine(item, cv2.DIST_L2,0,0.01,0.01)
+				# lefty = int((-x*vy/vx) + y)
+				# righty = int(((cols-x)*vy/vx)+y)
+				# image2 = cv2.line(image2, (cols-1,righty),(0,lefty),(0,255,0),2)
 			except OverflowError:
 				# Line exists outside of the image, numbers are too small
 				pass
@@ -165,31 +195,37 @@ class Filter:
 
 			try:
 				# Solidity
-				hull_area = cv2.contourArea(hull)
+				#hull_area = cv2.contourArea(hull)
 				solidity = float(A)/hull_area
 			except:
 				solidity = float(A)/A
 
 			# Equivalent Diameter
-			eD = np.sqrt(4*A/np.pi)
+			# eD = np.sqrt(4*A/np.pi)
+			eD = 0
 
 			# Mask + Pixel Points
-			grayimg = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
-			mask = np.zeros(grayimg.shape,np.uint8)
-			cv2.drawContours(mask,[item],0,255,-1)
-			pixelPoints = cv2.findNonZero(mask)
+			# grayimg = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+			# mask = np.zeros(grayimg.shape,np.uint8)
+			# cv2.drawContours(mask,[item],0,255,-1)
+			# pixelPoints = cv2.findNonZero(mask)
+			mask = range(15)
+			pixelPoints = range(15)
 
 			# Maximum and Minimum
-			min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(grayimg,mask=mask)
+			# min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(grayimg,mask=mask)
+			min_val, max_val, min_loc, max_loc = 0,0,0,0
 
 			# Mean Color/Intensity
-			mean = cv2.mean(image2, mask=mask)
+			# mean = cv2.mean(image2, mask=mask)
+			mean = [127.5]
 
 			# Extreme Points
-			leftMost = tuple(item[item[:,:,0].argmin()][0])
-			rightMost = tuple(item[item[:,:,0].argmax()][0])
-			topMost = tuple(item[item[:,:,1].argmin()][0])
-			bottomMost = tuple(item[item[:,:,1].argmax()][0])
+			# leftMost = tuple(item[item[:,:,0].argmin()][0])
+			# rightMost = tuple(item[item[:,:,0].argmax()][0])
+			# topMost = tuple(item[item[:,:,1].argmin()][0])
+			# bottomMost = tuple(item[item[:,:,1].argmax()][0])
+			leftMost, rightMost, topMost, bottomMost = 0,0,0,0
 
 			self.saveable.image = image2
 			# Add to moments
@@ -201,6 +237,8 @@ class Filter:
 				'k': k,
 				'w': w,
 				'h': h,
+				'x': x,
+				'y': y,
 				'hull': hull,
 				'ratio': aspect_ratio,
 				'extent': extent,
@@ -233,6 +271,9 @@ class Filter:
 		# BEGIN FILTER TEST
 		acceptances = []
 		index = 0 # Resets index to 0
+		shape = Image.shape
+		self.confidence.confidence = []
+		self.confidence.confidenceRect = []
 		for item in self.moments: # For all of the contour information, check if they pass the conditionals with the constants passed in the initialization:
 			# Check self.consts and current item to see if it passes the filtering threshold for each value
 			# Add an item representing that to 'contourStuff' if it does
@@ -277,13 +318,16 @@ class Filter:
 				contourStuff.insert(18,"GOOD maxAngle\t")
 			if item['angle'] > self.consts['minAngle']:
 				contourStuff.insert(19,"GOOD minAngle\t")
-			if item['w'] / float(image2.shape[0]) < self.consts['maxRatioWidthtoSize']:
+			if item['w'] / float(shape[0]) < self.consts['maxRatioWidthtoSize']:
 				contourStuff.insert(20,"GOOD maxRatioWidthtoSize\t")
-			if item['w'] / float(image2.shape[0]) > self.consts['minRatioWidthtoSize']:
+
+			if item['w'] / float(shape[0]) > self.consts['minRatioWidthtoSize']:
 				contourStuff.insert(21,"GOOD minRatioWidthtoSize\t")
-			if item['h'] / float(image2.shape[1]) < self.consts['maxRatioHeighttoSize']:
+
+			if item['h'] / float(shape[1]) < self.consts['maxRatioHeighttoSize']:
 				contourStuff.insert(22,"GOOD maxRatioHeighttoSize\t")
-			if item['h'] / float(image2.shape[1]) > self.consts['minRatioHeighttoSize']:
+
+			if item['h'] / float(shape[1]) > self.consts['minRatioHeighttoSize']:
 				contourStuff.insert(23,"GOOD minRatioHeighttoSize\t")
 			acceptance = len(contourStuff) # Acceptance calculated by length of 'contourStuff', how much stuff got put into it
 			acceptances.append(acceptance) # All Possibilities are appended to acceptances
@@ -291,6 +335,8 @@ class Filter:
 				# CONTOUR PASSES FILTER
 				if self.display: print "ACCEPTED CONTOUR "+str(index)
 				self.acceptedContours.append(index)
+			self.confidence.confidence.append(float(acceptance/self.consts['tolerance'])*100)
+			self.confidence.confidenceRect.append((item['x'], item['y'], item['w'], item['h']))
 			contourStuff.insert(0,index) # Insert the index (readability)
 			self.allContours.append(contourStuff)
 			index += 1 # Indecrement the index
@@ -298,25 +344,43 @@ class Filter:
 			if self.display: print "\nContour: ", item[0] # Prints out the contour information, how much each contour matched
 			for item2 in item:
 				if self.display: print item2,
-		image2 = np.copy(self.original)
+		image2 = Image
 		if self.display:
 			print 
 			print acceptances # Print the acceptance values of all the contours
 		#image2 = cv2.imread(filename)
+		# GOAL: AFTER ACCEPTED CONTOUR(S) ARE PASSED THROUGH, DETERMINE A CONFIDENCE FACTOR FOR EACH OF THEM
+		# WHEN TAKING THE NEXT IMAGE, ONLY SAMPLE THE PART THAT WE HAVE A HIGH CONFIDENCE IN + A BUFFER FOR MOVEMENT
+		maxConf = 0
+		target = 0
+		for index in range(len(self.confidence.confidence)):
+			if self.confidence.confidence[index] > maxConf:
+				maxConf = self.confidence.confidence[index]
+				target = index
+			elif self.confidence.confidence[index] == maxConf:
+				if self.moments[index]['A'] > self.moments[target]['A']:
+					# TAKE THE LARGER ONE
+					maxConf = self.confidence.confidence[index]
+					target = index
+		if len(self.confidence.confidence) > 0:
+			self.confidence.confidence = [self.confidence.confidence[target]]
+			self.confidence.confidenceRect = [self.confidence.confidenceRect[target]]
+		else:
+			self.confidence.confidence = [0]
 		for item in self.acceptedContours:
 			cv2.drawContours(image2, [self.contours[item]], -1, color, 3) # Draw the accepted contours
-			try:
-				defects = cv2.convexityDefects(self.contours[item],self.moments[item]['hull']) # Try to draw the convex hull
-			except:
-				defects = cv2.convexityDefects(self.contours[item],cv2.convexHull(self.contours[item],returnPoints=False)) # Otherwise, tries with a reobtaining of the hull
-			try:
-				for i in range(defects.shape[0]): # Tries to draw the defects of the convex hull
-				    s,e,f,d = defects[i,0]
-				    start = tuple(self.contours[item][s][0])
-				    end = tuple(self.contours[item][e][0])
-				    far = tuple(self.contours[item][f][0])
-				    cv2.line(image2,start,end,[0,255,255],2)
-			    #cv2.circle(image2,far,5,[255,0,255],-1)
-			except AttributeError: # If it fails print it out
-				if self.display: print "Attribute Failure!"
+			# try:
+			# 	defects = cv2.convexityDefects(self.contours[item],self.moments[item]['hull']) # Try to draw the convex hull
+			# except:
+			# 	defects = cv2.convexityDefects(self.contours[item],cv2.convexHull(self.contours[item],returnPoints=False)) # Otherwise, tries with a reobtaining of the hull
+			# try:
+			# 	for i in range(defects.shape[0]): # Tries to draw the defects of the convex hull
+			# 	    s,e,f,d = defects[i,0]
+			# 	    start = tuple(self.contours[item][s][0])
+			# 	    end = tuple(self.contours[item][e][0])
+			# 	    far = tuple(self.contours[item][f][0])
+			# 	    cv2.line(image2,start,end,[0,255,255],2)
+			#     #cv2.circle(image2,far,5,[255,0,255],-1)
+			# except AttributeError: # If it fails print it out
+			# 	if self.display: print "Attribute Failure!"
 		return image2 # Returns image with accepted contours drawn on it
