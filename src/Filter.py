@@ -110,24 +110,41 @@ class Filter:
 		i = None
 		self.setContours(cont) # ...
 		return thresh, i, cont, h # ...
+	def toleranceCheck(self, acceptance, index, x, y, w, h):
+		if acceptance >= self.consts['tolerance']: # If the acceptance exceeds the tolerance, accept the contour
+			# CONTOUR PASSES FILTER
+			if self.display: print "ACCEPTED CONTOUR "+str(index)
+			self.acceptedContours.append(index)
+		self.confidence.confidence.append(float(acceptance/self.consts['tolerance'])*100)
+		self.confidence.confidenceRect.append((x, y, w, h))
 	def run(self, Image, color=(0,255,0)):
 		# Image: image object to pass through to the function: allows filter to work with video frames
 		# Color: Color to draw contours in (not any of the other contour related things, however)
 		# RETURNS ORIGINAL IMAGE WITH CONTOURS THAT PASS THE FILTER DRAWN IN
 		# FILTER:
 		# self.original = np.copy(Image) # Sets the original image to the image just passed through
-		index = 0 # Resets index to 0
+		index = -1 # Resets index to -1
 		image2 = Image
+		shape = Image.shape
 		self.acceptedContours = []
 		self.moments = []
+		self.confidence.confidence = []
+		self.confidence.confidenceRect = []
 		for item in self.contours: # For each contour
+			index += 1
 			# MOMENTS
+			tol = 0
 			M = cv2.moments(item) # Moments matrix of the contour, everything the contour is
 			# Draw Contours
 			# cv2.drawContours(image2, [item], 0, color, 2) # Draws the contour on the image
 
 			# Area
 			A = cv2.contourArea(item)
+			tol += 1
+			if A < self.consts['minArea'] or A > self.consts['maxArea']:
+				#self.toleranceCheck(tol, index)
+				continue
+			tol += 1
 
 			try:
 				# Center X
@@ -142,6 +159,11 @@ class Filter:
 
 			# Perimeter
 			P = cv2.arcLength(item, True)
+			tol += 1
+			if P < self.consts['minPerimeter'] or P > self.consts['maxPerimeter']:
+				#self.toleranceCheck(tol, index)
+				continue
+			tol += 1
 
 			# Actual convex polygon
 			hull = cv2.convexHull(item,returnPoints=True)
@@ -151,6 +173,23 @@ class Filter:
 
 			# Normal Bounding Rect
 			x, y, w, h = cv2.boundingRect(item)
+			tol += 1
+			if w < self.consts['minWidth'] or w > self.consts['maxWidth']:
+				self.toleranceCheck(tol, index, x, y, w, h)
+				continue
+			tol += 2
+			if h < self.consts['minHeight'] or h > self.consts['maxHeight']:
+				self.toleranceCheck(tol, index, x, y, w, h)
+				continue
+			tol += 2
+			if w / float(shape[0]) < self.consts['minRatioWidthtoSize'] or w / float(shape[0]) > self.consts['maxRatioWidthtoSize']:
+				self.toleranceCheck(tol, index, x, y, w, h)
+				continue
+			tol += 2
+			if h / float(shape[1]) < self.consts['minRatioHeighttoSize'] or h / float(shape[1]) > self.consts['maxRatioHeighttoSize']:
+				self.toleranceCheck(tol, index, x, y, w, h)
+				continue
+			tol += 1
 			#cv2.rectangle(image2, (x,y), (x+w,y+h), (0,255,0), 2)
 
 			# Angled Rect
@@ -186,6 +225,14 @@ class Filter:
 				angle = 0
 				MA = 1
 				ma = 1
+			tol += 1
+			if angle < self.consts['minAngle'] or mean[0] > self.consts['maxAngle']:
+				self.toleranceCheck(tol, index, x, y, w, h)
+				continue
+			tol += 1
+
+
+
 			try:
 				# Line
 				pass
@@ -200,10 +247,20 @@ class Filter:
 
 			# Aspect Ratio
 			aspect_ratio = float(w)/h
+			tol += 1
+			if aspect_ratio < self.consts['minRatio'] or aspect_ratio > self.consts['maxRatio']:
+				self.toleranceCheck(tol, index, x, y, w, h)
+				continue
+			tol += 1
 
 			# Extent
 			rect_area = w*h
 			extent = float(A)/rect_area
+			tol += 1
+			if extent < self.consts['minExtent'] or extent > self.consts['maxExtent']:
+				self.toleranceCheck(tol, index, x, y, w, h)
+				continue
+			tol += 1
 
 			try:
 				# Solidity
@@ -211,6 +268,11 @@ class Filter:
 				solidity = float(A)/hull_area
 			except:
 				solidity = float(A)/A
+			tol += 1
+			if solidity < self.consts['minSolidity'] or solidity > self.consts['maxSolidity']:
+				self.toleranceCheck(tol, index, x, y, w, h)
+				continue
+			tol += 1
 
 			# Equivalent Diameter
 			# eD = np.sqrt(4*A/np.pi)
@@ -223,6 +285,11 @@ class Filter:
 			# pixelPoints = cv2.findNonZero(mask)
 			mask = range(15)
 			pixelPoints = range(15)
+			tol += 1
+			if pixelPoints < self.consts['minVerticies'] or pixelPoints > self.consts['maxVerticies']:
+				self.toleranceCheck(tol, index, x, y, w, h)
+				continue
+			tol += 1
 
 			# Maximum and Minimum
 			# min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(grayimg,mask=mask)
@@ -231,6 +298,11 @@ class Filter:
 			# Mean Color/Intensity
 			# mean = cv2.mean(image2, mask=mask)
 			mean = [127.5]
+			tol += 1
+			if mean[0] < self.consts['minMean'] or mean[0] > self.consts['maxMean']:
+				self.toleranceCheck(tol, index, x, y, w, h)
+				continue
+			tol += 1
 
 			# Extreme Points
 			# leftMost = tuple(item[item[:,:,0].argmin()][0])
@@ -240,6 +312,10 @@ class Filter:
 			leftMost, rightMost, topMost, bottomMost = 0,0,0,0
 
 			self.saveable.image = image2
+			# SHOULD ALWAYS PASS THE TEST
+			self.toleranceCheck(tol, index, x, y, w, h)
+
+
 			# Add to moments
 			self.moments.append({
 				'cx': cx,
@@ -281,88 +357,12 @@ class Filter:
 			index += 1 # Increments index of contour (only needed for display purposes, deprecated)
 
 		# BEGIN FILTER TEST
-		acceptances = []
-		index = 0 # Resets index to 0
-		shape = Image.shape
-		self.confidence.confidence = []
-		self.confidence.confidenceRect = []
-		for item in self.moments: # For all of the contour information, check if they pass the conditionals with the constants passed in the initialization:
-			# Check self.consts and current item to see if it passes the filtering threshold for each value
-			# Add an item representing that to 'contourStuff' if it does
-			contourStuff = []
-			if item['A'] < self.consts['maxArea']: 
-				contourStuff.insert(0,"GOOD maxArea\t")
-			if item['A'] > self.consts['minArea']:
-				contourStuff.insert(1,"GOOD minArea\t")
-			if item['P'] < self.consts['maxPerimeter']:
-				contourStuff.insert(2,"GOOD maxPerimeter\t")
-			if item['P'] > self.consts['minPerimeter']:
-				contourStuff.insert(3,"GOOD minPerimeter\t")
-			if item['w'] < self.consts['maxWidth']:
-				contourStuff.insert(4,"GOOD maxWidth\t")
-			if item['w'] > self.consts['minWidth']:
-				contourStuff.insert(5,"GOOD minWidth\t")
-			if item['h'] < self.consts['maxHeight']:
-				contourStuff.insert(6,"GOOD maxHeight\t")
-			if item['h'] > self.consts['minHeight']:
-				contourStuff.insert(7,"GOOD minHeight\t")
-			if item['ratio'] < self.consts['maxRatio']:
-				contourStuff.insert(8,"GOOD maxRatio\t")
-			if item['ratio'] > self.consts['minRatio']:
-				contourStuff.insert(9,"GOOD minRatio\t")
-			if item['extent'] < self.consts['maxExtent']:
-				contourStuff.insert(10,"GOOD maxExtent\t")
-			if item['extent'] > self.consts['minExtent']:
-				contourStuff.insert(11,"GOOD minExtent\t")
-			if item['solidity'] < self.consts['maxSolidity']:
-				contourStuff.insert(12,"GOOD maxSolidity\t")
-			if item['solidity'] > self.consts['minSolidity']:
-				contourStuff.insert(13,"GOOD minSolidity\t")
-			if item['mean'][0] < self.consts['maxMean']:
-				contourStuff.insert(14,"GOOD maxMean\t")
-			if item['mean'][0] > self.consts['minMean']:
-				contourStuff.insert(15,"GOOD minMean\t"+str(item['mean']))
-			if len(item['pixelPoints']) < self.consts['maxVerticies']:
-				contourStuff.insert(16,"GOOD maxVerticies\t")
-			if len(item['pixelPoints']) > self.consts['minVerticies']:
-				contourStuff.insert(17,"GOOD minVerticies\t"+str(len(item['pixelPoints'])))
-			if item['angle'] < self.consts['maxAngle']:
-				contourStuff.insert(18,"GOOD maxAngle\t")
-			if item['angle'] > self.consts['minAngle']:
-				contourStuff.insert(19,"GOOD minAngle\t")
-			if item['w'] / float(shape[0]) < self.consts['maxRatioWidthtoSize']:
-				contourStuff.insert(20,"GOOD maxRatioWidthtoSize\t")
-
-			if item['w'] / float(shape[0]) > self.consts['minRatioWidthtoSize']:
-				contourStuff.insert(21,"GOOD minRatioWidthtoSize\t")
-
-			if item['h'] / float(shape[1]) < self.consts['maxRatioHeighttoSize']:
-				contourStuff.insert(22,"GOOD maxRatioHeighttoSize\t")
-
-			if item['h'] / float(shape[1]) > self.consts['minRatioHeighttoSize']:
-				contourStuff.insert(23,"GOOD minRatioHeighttoSize\t")
-			acceptance = len(contourStuff) # Acceptance calculated by length of 'contourStuff', how much stuff got put into it
-			acceptances.append(acceptance) # All Possibilities are appended to acceptances
-			if acceptance >= self.consts['tolerance']: # If the acceptance exceeds the tolerance, accept the contour
-				# CONTOUR PASSES FILTER
-				if self.display: print "ACCEPTED CONTOUR "+str(index)
-				self.acceptedContours.append(index)
-			self.confidence.confidence.append(float(acceptance/self.consts['tolerance'])*100)
-			self.confidence.confidenceRect.append((item['x'], item['y'], item['w'], item['h']))
-			contourStuff.insert(0,index) # Insert the index (readability)
-			self.allContours.append(contourStuff)
-			index += 1 # Indecrement the index
-		for item in self.allContours:
-			if self.display: print "\nContour: ", item[0] # Prints out the contour information, how much each contour matched
-			for item2 in item:
-				if self.display: print item2,
+		# FILTER TEST NOW DONE IN MAIN FOR LOOP
 		image2 = Image
-		if self.display:
-			print 
-			print acceptances # Print the acceptance values of all the contours
-		#image2 = cv2.imread(filename)
+
 		# GOAL: AFTER ACCEPTED CONTOUR(S) ARE PASSED THROUGH, DETERMINE A CONFIDENCE FACTOR FOR EACH OF THEM
 		# WHEN TAKING THE NEXT IMAGE, ONLY SAMPLE THE PART THAT WE HAVE A HIGH CONFIDENCE IN + A BUFFER FOR MOVEMENT
+
 		maxConf = 0
 		target = 0
 		for index in range(len(self.confidence.confidence)):
