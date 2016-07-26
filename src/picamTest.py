@@ -76,19 +76,19 @@ imgs = [
 for frame in camera.capture_continuous(capture, format='bgr', use_video_port=True):
 	e1 = cv2.getTickCount() # Starttime
 	# AREA OF INTEREST
-	for i in range(50):
+	for i in range(500):
 		filt.image = frame.array
 		filtered, imagey, contours, h = filt.rgbGet(cv2.CHAIN_APPROX_SIMPLE, Constants.VIDEOS_RGB_FILTER_CONSTANTS_1)
 		coolImage = filt.run(filt.image)
-		capture.truncate(0)
+	capture.truncate(0)
 
 	cv2.imshow('frameN', coolImage)
-	key = cv2.waitKey(1)
+	#key = cv2.waitKey(1)
 	e2 = cv2.getTickCount()
 	time = (e2 - e1) / cv2.getTickFrequency()
 	print time
-	if key == ord('q'):
-		break
+	# if key == ord('q'):
+	# 	break
 cv2.destroyAllWindows()
 
 

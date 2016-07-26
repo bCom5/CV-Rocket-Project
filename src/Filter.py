@@ -148,7 +148,6 @@ class Filter:
 			index += 1
 			# MOMENTS
 			tol = 0
-			M = cv2.moments(item) # Moments matrix of the contour, everything the contour is
 			# Draw Contours
 			# cv2.drawContours(image2, [item], 0, color, 2) # Draws the contour on the image
 
@@ -159,17 +158,6 @@ class Filter:
 				#self.toleranceCheck(tol, index)
 				continue
 			tol += 1
-
-			try:
-				# Center X
-				cx = int(M['m10']/M['m00'])
-				# Center Y
-				cy = int(M['m01']/M['m00'])
-			except ZeroDivisionError:
-				# Area  is 0
-				cx = 0
-				cy = 0
-				A = 1
 
 			# Perimeter
 			P = cv2.arcLength(item, True)
@@ -240,7 +228,7 @@ class Filter:
 				MA = 1
 				ma = 1
 			tol += 1
-			if angle < self.consts['minAngle'] or mean[0] > self.consts['maxAngle']:
+			if angle < self.consts['minAngle'] or angle > self.consts['maxAngle']:
 				self.toleranceCheck(tol, index, x, y, w, h)
 				continue
 			tol += 1
@@ -328,7 +316,18 @@ class Filter:
 			self.saveable.image = image2
 			# SHOULD ALWAYS PASS THE TEST
 			self.toleranceCheck(tol, index, x, y, w, h)
+			M = cv2.moments(item) # Moments matrix of the contour, everything the contour is
 
+			try:
+				# Center X
+				cx = int(M['m10']/M['m00'])
+				# Center Y
+				cy = int(M['m01']/M['m00'])
+			except ZeroDivisionError:
+				# Area  is 0
+				cx = 0
+				cy = 0
+				A = 1
 
 			# Add to moments
 			self.moments.append({
