@@ -41,6 +41,7 @@ camera.framerate = 60
 capture = picamera.array.PiRGBArray(camera, size=(640,480))
 filt = f(cv2.imread('img/balloon.jpg'), consts=Constants.VIDEOS_CONTOUR_FILTER_CONSTANTS_1, display=False)
 time.sleep(0.1)
+
 imgs = [
 "img/balloon.jpg",
 "img/balloon2.jpg",
@@ -62,33 +63,53 @@ imgs = [
 "img/images-6.jpg"
 ]
 
-# for img in imgs:
-# 	for i in range(10):
-# 		filt.image = cv2.imread(img)
-# 		f, i, c, h = filt.rgbGet(cv2.CHAIN_APPROX_SIMPLE, Constants.VIDEOS_RGB_FILTER_CONSTANTS_1)
-# 		coolImage = filt.run(filt.image)
-# 		cv2.imshow('frame', coolImage)
-# 		cv2.waitKey(0)
+outputDir = "/home/pi/Documents/RocketProject/cv/src/outputs.txt"
+doOutput = False
 
-# 	filt.confidence.confidence = [0]
+numFrames = 0
+controlFrames = 3 # Used to stop at a certain number of frames
+time = 0
+try:
+	tot1 = cv2.getTickCount()
+	for frame in camera.capture_continuous(capture, format='bgr', use_video_port=True):
+		e1 = cv2.getTickCount() # Starttime
 
+		# AREA OF INTEREST
+		for i in range(500):
+			filt.image = frame.array
+			filtered, imagey, contours, h = filt.rgbGet(cv2.CHAIN_APPROX_SIMPLE, Constants.VIDEOS_RGB_FILTER_CONSTANTS_1)
+			coolImage = filt.run(filt.image)
+			capture.truncate(0)
 
-for frame in camera.capture_continuous(capture, format='bgr', use_video_port=True):
-	e1 = cv2.getTickCount() # Starttime
-	# AREA OF INTEREST
-	for i in range(500):
-		filt.image = frame.array
-		filtered, imagey, contours, h = filt.rgbGet(cv2.CHAIN_APPROX_SIMPLE, Constants.VIDEOS_RGB_FILTER_CONSTANTS_1)
-		coolImage = filt.run(filt.image)
-	capture.truncate(0)
+		#cv2.imshow('frameN', coolImage)
+		#key = cv2.waitKey(1)
+		
+		# if key == ord('q'):
+		# 	break
 
-	cv2.imshow('frameN', coolImage)
-	#key = cv2.waitKey(1)
-	e2 = cv2.getTickCount()
-	time = (e2 - e1) / cv2.getTickFrequency()
-	print time
-	# if key == ord('q'):
-	# 	break
-cv2.destroyAllWindows()
+		e2 = cv2.getTickCount()
+		time += (e2 - e1) / cv2.getTickFrequency()
+		numFrames += 1
 
-
+		if controlFrames != 0 and numFrames >= controlFrames:
+			break
+	tot2 = cv2.getTickCount()
+	total = (tot2 - tot1) / cv2.getTickFrequency()
+	cv2.destroyAllWindows()
+except KeyboardInterrupt:
+	pass
+output = "\nAVERAGE TIME PER FRAME:\t "+str(time/numFrames)+"\n\nAVERAGE FRAMES PER SECOND:\t "+str(1 / (time / numFrames))+"\n\nTOTAL TIME INCLUDING CAPTURE:\t "+str(total)+"\n\nAVERAGE TIME PER FRAME INCLUDING CAPTURE:\t "+str(total/numFrames)+"\n\nAVERAGE FRAMES PER SECOND INCLUDING CAPTURE:\t "+str(1 / (total/numFrames))+"\n\nSTOPPED AT FRAME:\t "+str(numFrames)+" OUT OF: "+str(controlFrames)+"\n\n"
+print output
+if doOutput:
+	try:
+		fil = open(outputDir, "r")
+		fil.close()
+	except:
+		fil = open(outputDir, "w")
+		fil.close()
+	f = open(outputDir, "a")
+	f.write(output)
+	f.write("================================================================")
+	f.write("\n\n")
+	f.write("================================================================")
+	f.close()

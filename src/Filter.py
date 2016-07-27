@@ -152,7 +152,7 @@ class Filter:
 			# cv2.drawContours(image2, [item], 0, color, 2) # Draws the contour on the image
 
 			# Area
-			A = cv2.contourArea(item)
+			A = cv2.contourArea(item) # 0.00001888005142 seconds per frame
 			tol += 1
 			if A < self.consts['minArea'] or A > self.consts['maxArea']:
 				#self.toleranceCheck(tol, index)
@@ -167,28 +167,57 @@ class Filter:
 				continue
 			tol += 1
 
+			# Normal Bounding Rect
+			x, y, w, h = cv2.boundingRect(item) # 0.00002342947307 seconds per frame
+			tol += 1
+			if w < self.consts['minWidth'] or w > self.consts['maxWidth']:
+				# self.toleranceCheck(tol, index, x, y, w, h)
+				continue
+			tol += 2
+			if h < self.consts['minHeight'] or h > self.consts['maxHeight']:
+				# self.toleranceCheck(tol, index, x, y, w, h)
+				continue
+			tol += 2
+			if w / float(shape[0]) < self.consts['minRatioWidthtoSize'] or w / float(shape[0]) > self.consts['maxRatioWidthtoSize']:
+				# self.toleranceCheck(tol, index, x, y, w, h)
+				continue
+			tol += 2
+			if h / float(shape[1]) < self.consts['minRatioHeighttoSize'] or h / float(shape[1]) > self.consts['maxRatioHeighttoSize']:
+				# self.toleranceCheck(tol, index, x, y, w, h)
+				continue
+			tol += 1
+
+			# Aspect Ratio
+			aspect_ratio = float(w)/h
+			tol += 1
+			if aspect_ratio < self.consts['minRatio'] or aspect_ratio > self.consts['maxRatio']:
+				# self.toleranceCheck(tol, index, x, y, w, h)
+				continue
+			tol += 1
+
+			# Extent
+			rect_area = w*h
+			extent = float(A)/rect_area
+			tol += 1
+			if extent < self.consts['minExtent'] or extent > self.consts['maxExtent']:
+				self.toleranceCheck(tol, index, x, y, w, h)
+				continue
+			tol += 1
+
 			# Actual convex polygon
 			hull = cv2.convexHull(item,returnPoints=True)
 
 			# Is Convex?
 			k = cv2.isContourConvex(item)
 
-			# Normal Bounding Rect
-			x, y, w, h = cv2.boundingRect(item)
+			try:
+				# Solidity
+				hull_area = cv2.contourArea(hull)
+				solidity = float(A)/hull_area
+			except:
+				solidity = float(A)/A
 			tol += 1
-			if w < self.consts['minWidth'] or w > self.consts['maxWidth']:
-				self.toleranceCheck(tol, index, x, y, w, h)
-				continue
-			tol += 2
-			if h < self.consts['minHeight'] or h > self.consts['maxHeight']:
-				self.toleranceCheck(tol, index, x, y, w, h)
-				continue
-			tol += 2
-			if w / float(shape[0]) < self.consts['minRatioWidthtoSize'] or w / float(shape[0]) > self.consts['maxRatioWidthtoSize']:
-				self.toleranceCheck(tol, index, x, y, w, h)
-				continue
-			tol += 2
-			if h / float(shape[1]) < self.consts['minRatioHeighttoSize'] or h / float(shape[1]) > self.consts['maxRatioHeighttoSize']:
+			if solidity < self.consts['minSolidity'] or solidity > self.consts['maxSolidity']:
 				self.toleranceCheck(tol, index, x, y, w, h)
 				continue
 			tol += 1
@@ -247,35 +276,15 @@ class Filter:
 				# Line exists outside of the image, numbers are too small
 				pass
 
-			# Aspect Ratio
-			aspect_ratio = float(w)/h
+			# Mean Color/Intensity
+			# mean = cv2.mean(image2, mask=mask)
+			mean = [127.5]
+
 			tol += 1
-			if aspect_ratio < self.consts['minRatio'] or aspect_ratio > self.consts['maxRatio']:
+			if mean[0] < self.consts['minMean'] or mean[0] > self.consts['maxMean']:
 				self.toleranceCheck(tol, index, x, y, w, h)
 				continue
 			tol += 1
-
-			# Extent
-			rect_area = w*h
-			extent = float(A)/rect_area
-			tol += 1
-			if extent < self.consts['minExtent'] or extent > self.consts['maxExtent']:
-				self.toleranceCheck(tol, index, x, y, w, h)
-				continue
-			tol += 1
-
-			try:
-				# Solidity
-				#hull_area = cv2.contourArea(hull)
-				solidity = float(A)/hull_area
-			except:
-				solidity = float(A)/A
-			tol += 1
-			if solidity < self.consts['minSolidity'] or solidity > self.consts['maxSolidity']:
-				self.toleranceCheck(tol, index, x, y, w, h)
-				continue
-			tol += 1
-
 			# Equivalent Diameter
 			# eD = np.sqrt(4*A/np.pi)
 			eD = 0
@@ -296,15 +305,7 @@ class Filter:
 			# Maximum and Minimum
 			# min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(grayimg,mask=mask)
 			min_val, max_val, min_loc, max_loc = 0,0,0,0
-
-			# Mean Color/Intensity
-			# mean = cv2.mean(image2, mask=mask)
-			mean = [127.5]
-			tol += 1
-			if mean[0] < self.consts['minMean'] or mean[0] > self.consts['maxMean']:
-				self.toleranceCheck(tol, index, x, y, w, h)
-				continue
-			tol += 1
+			
 
 			# Extreme Points
 			# leftMost = tuple(item[item[:,:,0].argmin()][0])
@@ -316,23 +317,23 @@ class Filter:
 			self.saveable.image = image2
 			# SHOULD ALWAYS PASS THE TEST
 			self.toleranceCheck(tol, index, x, y, w, h)
-			M = cv2.moments(item) # Moments matrix of the contour, everything the contour is
+			# M = cv2.moments(item) # Moments matrix of the contour, everything the contour is
 
-			try:
-				# Center X
-				cx = int(M['m10']/M['m00'])
-				# Center Y
-				cy = int(M['m01']/M['m00'])
-			except ZeroDivisionError:
-				# Area  is 0
-				cx = 0
-				cy = 0
-				A = 1
+			# try:
+			# 	# Center X
+			# 	cx = int(M['m10']/M['m00'])
+			# 	# Center Y
+			# 	cy = int(M['m01']/M['m00'])
+			# except ZeroDivisionError:
+			# 	# Area  is 0
+			# 	cx = 0
+			# 	cy = 0
+			# 	A = 1
 
 			# Add to moments
 			self.moments.append({
-				'cx': cx,
-				'cy': cy,
+				'cx': x+w/2,
+				'cy': y+h/2,
 				'A': A,
 				'P': P,
 				'k': k,
