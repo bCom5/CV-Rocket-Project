@@ -76,9 +76,9 @@ try:
 
 		# AREA OF INTEREST
 		# for i in range(500):
-		# filt.image = frame.array
-		# filtered, imagey, contours, h = filt.rgbGet(cv2.CHAIN_APPROX_SIMPLE, Constants.VIDEOS_RGB_FILTER_CONSTANTS_1)
-		# coolImage = filt.run(filt.image)
+		filt.image = frame.array
+		filtered, imagey, contours, h = filt.rgbGet(cv2.CHAIN_APPROX_SIMPLE, Constants.VIDEOS_RGB_FILTER_CONSTANTS_1)
+		coolImage = filt.run(filt.image)
 		capture.truncate(0)
 		capture.seek(0)
 
