@@ -64,10 +64,10 @@ imgs = [
 ]
 
 outputDir = "/home/pi/Documents/RocketProject/cv/src/outputs.txt"
-doOutput = False
+doOutput = True
 
 numFrames = 0
-controlFrames = 3 # Used to stop at a certain number of frames
+controlFrames = 500 # Used to stop at a certain number of frames
 time = 0
 try:
 	tot1 = cv2.getTickCount()
@@ -75,17 +75,18 @@ try:
 		e1 = cv2.getTickCount() # Starttime
 
 		# AREA OF INTEREST
-		for i in range(500):
-			filt.image = frame.array
-			filtered, imagey, contours, h = filt.rgbGet(cv2.CHAIN_APPROX_SIMPLE, Constants.VIDEOS_RGB_FILTER_CONSTANTS_1)
-			coolImage = filt.run(filt.image)
-			capture.truncate(0)
+		# for i in range(500):
+		# filt.image = frame.array
+		# filtered, imagey, contours, h = filt.rgbGet(cv2.CHAIN_APPROX_SIMPLE, Constants.VIDEOS_RGB_FILTER_CONSTANTS_1)
+		# coolImage = filt.run(filt.image)
+		capture.truncate(0)
+		capture.seek(0)
 
-		#cv2.imshow('frameN', coolImage)
-		#key = cv2.waitKey(1)
+		# #cv2.imshow('frameN', coolImage)
+		# #key = cv2.waitKey(1)
 		
-		# if key == ord('q'):
-		# 	break
+		# # if key == ord('q'):
+		# # 	break
 
 		e2 = cv2.getTickCount()
 		time += (e2 - e1) / cv2.getTickFrequency()
@@ -98,6 +99,7 @@ try:
 	cv2.destroyAllWindows()
 except KeyboardInterrupt:
 	pass
+camera.close()
 output = "\nAVERAGE TIME PER FRAME:\t "+str(time/numFrames)+"\n\nAVERAGE FRAMES PER SECOND:\t "+str(1 / (time / numFrames))+"\n\nTOTAL TIME INCLUDING CAPTURE:\t "+str(total)+"\n\nAVERAGE TIME PER FRAME INCLUDING CAPTURE:\t "+str(total/numFrames)+"\n\nAVERAGE FRAMES PER SECOND INCLUDING CAPTURE:\t "+str(1 / (total/numFrames))+"\n\nSTOPPED AT FRAME:\t "+str(numFrames)+" OUT OF: "+str(controlFrames)+"\n\n"
 print output
 if doOutput:

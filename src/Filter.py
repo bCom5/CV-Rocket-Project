@@ -91,8 +91,12 @@ class Filter:
 		#blur = cv2.GaussianBlur(self.image, (5,5), 0) # Blurs without converting to gray image
 		self.image = blur
 
-		lower = np.array([consts['rgbBlueMin'], consts['rgbGreenMin'], consts['rgbRedMin']])
-		upper = np.array([consts['rgbBlueMax'], consts['rgbGreenMax'], consts['rgbRedMax']])
+		lower = cv2.cv.Scalar(consts['rgbBlueMin'], consts['rgbGreenMin'], consts['rgbRedMin'])
+		upper = cv2.cv.Scalar(consts['rgbBlueMax'], consts['rgbGreenMax'], consts['rgbRedMax'])
+
+
+		# lower = np.array([consts['rgbBlueMin'], consts['rgbGreenMin'], consts['rgbRedMin']])
+		# upper = np.array([consts['rgbBlueMax'], consts['rgbGreenMax'], consts['rgbRedMax']])
 
 		end = cv2.inRange(self.image, lower, upper)
 
