@@ -398,9 +398,12 @@ class Filter:
 		if len(self.confidence.confidence) > 0:
 			self.confidence.confidence = [self.confidence.confidence[target]]
 			self.confidence.confidenceRect = [self.confidence.confidenceRect[target]]
+			print "X, Y: "+ str(self.confidence.confidenceRect[0][0])+" "+ str(self.confidence.confidenceRect[0][1])
 		else:
 			self.confidence.confidence = [0]
+		
 		for item in self.acceptedContours:
+
 			cv2.drawContours(self.image, [self.contours[item]], -1, color, 3) # Draw the accepted contours
 			# try:
 			# 	defects = cv2.convexityDefects(self.contours[item],self.moments[item]['hull']) # Try to draw the convex hull
