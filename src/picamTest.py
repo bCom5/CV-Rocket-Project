@@ -39,8 +39,9 @@ outputDir = "/home/pi/Documents/RocketProject/cv/src/outputs.txt"
 doOutput = True
 
 numFrames = 0
-controlFrames = 500 # Used to stop at a certain number of frames
+controlFrames = 5000 # Used to stop at a certain number of frames
 time = 0
+waitDelay = 1
 
 """
 try:
@@ -110,7 +111,7 @@ try:
 		capture.seek(0)
 
 		cv2.imshow('frameN', coolImage)
-		key = cv2.waitKey(0)
+		key = cv2.waitKey(waitDelay)
 		
 		# if key == ord('q'):
 		# 	break
