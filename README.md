@@ -55,4 +55,4 @@ picamTest.py consists of a few key steps:
 7. When it ends, it outputs all the known information of time per frame and capture to the screen and to "cv/src/outputs.txt", where data from every test is collected.
 
 
-That is essentially all that is need to understand this code. If you have any questions, email me at adamznow@gmail.com.
+That is essentially all that is needed to understand this code. If you have any questions, email me at adamznow@gmail.com.
