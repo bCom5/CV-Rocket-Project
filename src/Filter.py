@@ -133,7 +133,7 @@ class Filter:
 			if self.display: print "ACCEPTED CONTOUR "+str(index)
 			self.acceptedContours.append(index)
 		self.moments.append({'A': w*h})
-		self.confidence.confidence.append(float(acceptance/self.consts['tolerance'])*100)
+		self.confidence.confidence.append(float(acceptance)/self.consts['tolerance']*100)
 		self.confidence.confidenceRect.append((x, y, w, h))
 	def run(self, Image, color=(0,255,0)):
 		# Image: image object to pass through to the function: allows filter to work with video frames
@@ -148,6 +148,7 @@ class Filter:
 		self.moments = []
 		self.confidence.confidence = []
 		self.confidence.confidenceRect = []
+		print len(self.contours)
 		for item in self.contours: # For each contour
 			index += 1
 			# MOMENTS
@@ -175,19 +176,19 @@ class Filter:
 			x, y, w, h = cv2.boundingRect(item) # 0.00002342947307 seconds per frame
 			tol += 1
 			if w < self.consts['minWidth'] or w > self.consts['maxWidth']:
-				# self.toleranceCheck(tol, index, x, y, w, h)
+				self.toleranceCheck(tol, index, x, y, w, h)
 				continue
 			tol += 2
 			if h < self.consts['minHeight'] or h > self.consts['maxHeight']:
-				# self.toleranceCheck(tol, index, x, y, w, h)
+				self.toleranceCheck(tol, index, x, y, w, h)
 				continue
 			tol += 2
 			if w / float(shape[0]) < self.consts['minRatioWidthtoSize'] or w / float(shape[0]) > self.consts['maxRatioWidthtoSize']:
-				# self.toleranceCheck(tol, index, x, y, w, h)
+				self.toleranceCheck(tol, index, x, y, w, h)
 				continue
 			tol += 2
 			if h / float(shape[1]) < self.consts['minRatioHeighttoSize'] or h / float(shape[1]) > self.consts['maxRatioHeighttoSize']:
-				# self.toleranceCheck(tol, index, x, y, w, h)
+				self.toleranceCheck(tol, index, x, y, w, h)
 				continue
 			tol += 1
 
@@ -301,7 +302,7 @@ class Filter:
 			mask = range(15)
 			pixelPoints = range(15)
 			tol += 1
-			if pixelPoints < self.consts['minVerticies'] or pixelPoints > self.consts['maxVerticies']:
+			if len(pixelPoints) < self.consts['minVerticies'] or len(pixelPoints) > self.consts['maxVerticies']:
 				self.toleranceCheck(tol, index, x, y, w, h)
 				continue
 			tol += 1
@@ -321,6 +322,8 @@ class Filter:
 			self.saveable.image = image2
 			# SHOULD ALWAYS PASS THE TEST
 			self.toleranceCheck(tol, index, x, y, w, h)
+
+			print index
 			# M = cv2.moments(item) # Moments matrix of the contour, everything the contour is
 
 			# try:
@@ -334,45 +337,44 @@ class Filter:
 			# 	cy = 0
 			# 	A = 1
 
-			# Add to moments
-			self.moments.append({
-				'cx': x+w/2,
-				'cy': y+h/2,
-				'A': A,
-				'P': P,
-				'k': k,
-				'w': w,
-				'h': h,
-				'x': x,
-				'y': y,
-				'hull': hull,
-				'ratio': aspect_ratio,
-				'extent': extent,
-				'solidity': solidity,
-				'eD': eD,
-				'angle': angle,
-				'majorAxis': MA,
-				'minorAxis': ma,
-				'mask': mask,
-				'pixelPoints': pixelPoints,
-				'maxVal': max_val,
-				'maxLocation': max_loc,
-				'minVal': min_val,
-				'minLocation': min_loc,
-				'mean': mean,
-				'leftMost': leftMost,
-				'rightMost': rightMost,
-				'topMost': topMost,
-				'bottomMost': bottomMost
-				}) # The dictionary of all the contour information- most time consuming, but is not nescessary
-			# Not all of the information is currently used, jsut there for reference
+			# # Add to moments
+			# self.moments.append({
+			# 	'cx': x+w/2,
+			# 	'cy': y+h/2,
+			# 	'A': A,
+			# 	'P': P,
+			# 	'k': k,
+			# 	'w': w,
+			# 	'h': h,
+			# 	'x': x,
+			# 	'y': y,
+			# 	'hull': hull,
+			# 	'ratio': aspect_ratio,
+			# 	'extent': extent,
+			# 	'solidity': solidity,
+			# 	'eD': eD,
+			# 	'angle': angle,
+			# 	'majorAxis': MA,
+			# 	'minorAxis': ma,
+			# 	'mask': mask,
+			# 	'pixelPoints': pixelPoints,
+			# 	'maxVal': max_val,
+			# 	'maxLocation': max_loc,
+			# 	'minVal': min_val,
+			# 	'minLocation': min_loc,
+			# 	'mean': mean,
+			# 	'leftMost': leftMost,
+			# 	'rightMost': rightMost,
+			# 	'topMost': topMost,
+			# 	'bottomMost': bottomMost
+			# 	}) # The dictionary of all the contour information- most time consuming, but is not nescessary
+			# # Not all of the information is currently used, jsut there for reference
 
 			if self.display:
 				# Don't display anything because video feeds make it annoyingly slow (when displaying stuff in this loop)
 				pass
 				#self.saveable.showRaw("Item "+str(index))
 				#self.saveable.testKey()
-			index += 1 # Increments index of contour (only needed for display purposes, deprecated)
 
 		# BEGIN FILTER TEST
 		# FILTER TEST NOW DONE IN MAIN FOR LOOP
@@ -383,14 +385,19 @@ class Filter:
 
 		maxConf = 0
 		target = 0
+		print self.confidence.confidence
 		for index in range(len(self.confidence.confidence)):
 			if self.confidence.confidence[index] > maxConf:
 				maxConf = self.confidence.confidence[index]
 				target = index
 			elif self.confidence.confidence[index] == maxConf:
 				try:
-					if self.moments[index]['A'] > self.moments[target]['A']:
+					area1 = self.confidence.confidenceRect[index][2] * self.confidence.confidenceRect[index][3]
+					area2 = self.confidence.confidenceRect[target][2] * self.confidence.confidenceRect[target][3]
+					if area1 > area2:
 						# TAKE THE LARGER ONE
+						print "%.1f is > than %.1f" % (area1, area2)
+
 						maxConf = self.confidence.confidence[index]
 						target = index
 				except IndexError:
@@ -398,13 +405,14 @@ class Filter:
 		if len(self.confidence.confidence) > 0:
 			self.confidence.confidence = [self.confidence.confidence[target]]
 			self.confidence.confidenceRect = [self.confidence.confidenceRect[target]]
-			print "X, Y: "+ str(self.confidence.confidenceRect[0][0])+" "+ str(self.confidence.confidenceRect[0][1])
+			print "X:\t%i Y:\t%i W:\t%i H:\t%i" % (self.confidence.confidenceRect[0][0], self.confidence.confidenceRect[0][1], self.confidence.confidenceRect[0][2], self.confidence.confidenceRect[0][3])
 		else:
 			self.confidence.confidence = [0]
 		
+		print len(self.contours)
 		for item in self.acceptedContours:
-
-			cv2.drawContours(self.image, [self.contours[item]], -1, color, 3) # Draw the accepted contours
+			print item,
+			cv2.drawContours(image2, [self.contours[item]], -1, color, 3) # Draw the accepted contours
 			# try:
 			# 	defects = cv2.convexityDefects(self.contours[item],self.moments[item]['hull']) # Try to draw the convex hull
 			# except:

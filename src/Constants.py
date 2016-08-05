@@ -60,26 +60,26 @@ VIDEOS_CONTOUR_FILTER_CONSTANTS_1 = {
 	'minArea' : 5,
 	'maxArea' : 20000,
 	'minPerimeter' : 5,
-	'maxPerimeter' : 3000,
+	'maxPerimeter' : 8000,
 	'minWidth' : 2,
-	'maxWidth' : 600,
+	'maxWidth' : 1200,
 	'minHeight' : 3,
-	'maxHeight' : 300,
+	'maxHeight' : 1200,
 	'minRatio' : 0.0,
 	'maxRatio' : 1000.0,
-	'minExtent' : 0.27,
-	'maxExtent' : 0.9,
+	'minExtent' : 0.01,
+	'maxExtent' : 0.99,
 	'minSolidity' : 0.390,
 	'maxSolidity' : 1000.0,
 	'minMean' : 0.0,
 	'maxMean' : 255.0,
-	'minVerticies' : 10,
+	'minVerticies' : 2,
 	'maxVerticies' : 10200,
 	'minAngle' : -360.0,
 	'maxAngle' : 360.0,
-	'minRatioWidthtoSize' : 0.02,
+	'minRatioWidthtoSize' : 0.001,
 	'maxRatioWidthtoSize' : 0.9,
-	'minRatioHeighttoSize' : 0.02,
+	'minRatioHeighttoSize' : 0.001,
 	'maxRatioHeighttoSize' : 0.9,
 	'tolerance' : 24 # Number of above conditions to be met for successful contour observation
 }
@@ -103,13 +103,13 @@ PHOTOS_RGB_FILTER_CONSTANTS_2 = {
 }
 VIDEOS_RGB_FILTER_CONSTANTS_1 = {
 # CLOSE FILTER
-	'rgbRedMin' : 104,
+	'rgbRedMin' : 98,
 	'rgbRedMax' : 255,
 	'rgbGreenMin' : 0,
 	'rgbGreenMax' : 101,
 	'rgbBlueMin' : 0,
 	'rgbBlueMax' : 130
 }
-CONFIDENCE_TOLERANCE = 60 # 0-100
+CONFIDENCE_TOLERANCE = 90 # 0-100
 CONFIDENCE_WINDOW_WIDTH = 50
 CONFIDENCE_WINDOW_HEIGHT = 50

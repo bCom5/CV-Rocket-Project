@@ -64,7 +64,7 @@ except KeyboardInterrupt:
 	pass
 """
 camera.start_preview()
-t.sleep(10)
+t.sleep(5)
 camera.stop_preview()
 
 
@@ -83,7 +83,6 @@ while True:
 
 """
 """
-
 tot1 = cv2.getTickCount()
 for frame in camera.capture_continuous(capture, format='bgr', use_video_port=True):
 	e1 = cv2.getTickCount()
@@ -96,7 +95,7 @@ for frame in camera.capture_continuous(capture, format='bgr', use_video_port=Tru
 	if controlFrames != 0 and numFrames >= controlFrames:
 		break
 """
-"""
+
 try:
 	tot1 = cv2.getTickCount()
 	for frame in camera.capture_continuous(capture, format='bgr', use_video_port=True):
@@ -110,8 +109,8 @@ try:
 		capture.truncate(0)
 		capture.seek(0)
 
-		# cv2.imshow('frameN', coolImage)
-		# key = cv2.waitKey(1)
+		cv2.imshow('frameN', coolImage)
+		key = cv2.waitKey(0)
 		
 		# if key == ord('q'):
 		# 	break
@@ -124,7 +123,7 @@ try:
 			break
 except KeyboardInterrupt:
 	pass
-"""
+
 
 tot2 = cv2.getTickCount()
 total = (tot2 - tot1) / cv2.getTickFrequency()

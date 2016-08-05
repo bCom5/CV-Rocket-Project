@@ -1,0 +1,17 @@
+#!/bin/bash
+SRC=/Users/jmn/.virtualenvs/cv/src
+DST=root@192.168.1.2:/home/pi/Documents/RocketProject/cv/src
+FILETYPE=*.py
+filename=${1:-$SRC}
+ip=${2:-$DST}
+files=${3:-$FILETYPE}
+
+echo Copying $files from $filename to $ip
+echo Password is ‘raspberry’
+scp $filename/$files $ip
+echo Copying complete! Now attempting to move files…
+
+#ssh $ip /home/pi/movetopi
+#echo PLEASE MOVE FILES MANUALLY!
+#ssh $ip mv /root/$files /home/pi/Documents/RocketProject/cv/src; mv /root/*.pyc /home/pi/Documents/RocketProject/cv/src;
+echo COMPLETE!
