@@ -148,7 +148,7 @@ class Filter:
 		self.moments = []
 		self.confidence.confidence = []
 		self.confidence.confidenceRect = []
-		print len(self.contours)
+		# print len(self.contours)
 		for item in self.contours: # For each contour
 			index += 1
 			# MOMENTS
@@ -323,7 +323,7 @@ class Filter:
 			# SHOULD ALWAYS PASS THE TEST
 			self.toleranceCheck(tol, index, x, y, w, h)
 
-			print index
+			# print index
 			# M = cv2.moments(item) # Moments matrix of the contour, everything the contour is
 
 			# try:
@@ -385,7 +385,7 @@ class Filter:
 
 		maxConf = 0
 		target = 0
-		print self.confidence.confidence
+		# print self.confidence.confidence
 		for index in range(len(self.confidence.confidence)):
 			if self.confidence.confidence[index] > maxConf:
 				maxConf = self.confidence.confidence[index]
@@ -409,9 +409,9 @@ class Filter:
 		else:
 			self.confidence.confidence = [0]
 		
-		print len(self.contours)
+		# print len(self.contours)
 		for item in self.acceptedContours:
-			print item,
+			# print item,
 			cv2.drawContours(image2, [self.contours[item]], -1, color, 3) # Draw the accepted contours
 			# try:
 			# 	defects = cv2.convexityDefects(self.contours[item],self.moments[item]['hull']) # Try to draw the convex hull
