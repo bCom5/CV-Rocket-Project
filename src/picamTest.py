@@ -12,7 +12,7 @@ camera.framerate = 60
 capture = picamera.array.PiRGBArray(camera, size=(640,480))
 # image = np.empty((480, 640, 3), dtype=np.uint8)
 filt = f(cv2.imread('img/balloon.jpg'), consts=Constants.VIDEOS_CONTOUR_FILTER_CONSTANTS_1, display=False)
-t.sleep(0.1)
+# t.sleep(0.1)
 
 imgs = [
 "img/balloon.jpg",

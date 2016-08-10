@@ -75,7 +75,8 @@ for item in pics:
 	#blur = cv2.GaussianBlur(grayimg,(5,5),0)
 	img = si(item) # Creates a savable image (an image that is saveable to the hard drive)
 	im = cv2.imread(item) # Reads the same image again, 'im' is the original image
-	blur = filt.blur() # blurs the image using the filter object
+	# blur = filt.blur() # blurs the image using the filter object
+	blur = im
 	img.showRaw("original") # shows the image with title 'original'
 	cv2.waitKey(0) # waits 0 milliseconds (forever) for a key to be pressed
 	img.image = blur # sets the savable image to the blurred image

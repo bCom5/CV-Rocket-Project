@@ -73,19 +73,20 @@ class Filter:
 		else:
 			if not self.confidence.usingConfidence:
 				x, y, w, h = self.confidence.getxy(0)
-				print x, y, w, h
+				if self.display: print x, y, w, h
 				#blur = cv2.blur(self.image[y:y+h, x:x+w], (5,5))
 				blur = self.image[y:y+h, x:x+w]
 				self.confidence.usingConfidence = True
 				self.confidence.imageVals = [x, y]
 			else:
-				x, y, w, h = self.confidence.getxy(-25)
+				x, y, w, h = self.confidence.getxy(-Constants.CONFIDENCE_WINDOW_WIDTH/2)
 				x += self.confidence.imageVals[0]
 				if x < 0: x = 0
 				y += self.confidence.imageVals[1]
 				if y < 0: y = 0
-				print "USED CONFIDENCE ALREADY: TRYING TO FIX LOCATION OF CONFIDENCE"
-				print x, y, w, h
+				if self.display:
+					print "USED CONFIDENCE ALREADY: TRYING TO FIX LOCATION OF CONFIDENCE"
+					print x, y, w, h
 				#blur = cv2.blur(self.image[y:y+h, x:x+w], (5,5))
 				blur = self.image[y:y+h, x:x+w]
 		#blur = cv2.GaussianBlur(self.image, (5,5), 0) # Blurs without converting to gray image
@@ -237,7 +238,7 @@ class Filter:
 			"""
 
 			# Circle
-			# (x,y), radius = cv2.minEnclosingCircle(item)
+			# (x,y), radius = cv2.minEnclosingCircle(item) # Expensive
 			# center = (int(x),int(y))
 			# radius = int(radius)
 			# image2 = cv2.circle(image2, center, radius, (0,255,255), 2)
@@ -282,7 +283,7 @@ class Filter:
 				pass
 
 			# Mean Color/Intensity
-			# mean = cv2.mean(image2, mask=mask)
+			# mean = cv2.mean(image2, mask=mask) # Expensive
 			mean = [127.5]
 
 			tol += 1
@@ -296,9 +297,9 @@ class Filter:
 
 			# Mask + Pixel Points
 			# grayimg = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
-			# mask = np.zeros(grayimg.shape,np.uint8)
+			# mask = np.zeros(grayimg.shape,np.uint8) # Expensive
 			# cv2.drawContours(mask,[item],0,255,-1)
-			# pixelPoints = cv2.findNonZero(mask)
+			# pixelPoints = cv2.findNonZero(mask) # Expensive
 			mask = range(15)
 			pixelPoints = range(15)
 			tol += 1
@@ -396,7 +397,7 @@ class Filter:
 					area2 = self.confidence.confidenceRect[target][2] * self.confidence.confidenceRect[target][3]
 					if area1 > area2:
 						# TAKE THE LARGER ONE
-						print "%.1f is > than %.1f" % (area1, area2)
+						if self.display: print "%.1f is > than %.1f" % (area1, area2)
 
 						maxConf = self.confidence.confidence[index]
 						target = index
@@ -405,7 +406,7 @@ class Filter:
 		if len(self.confidence.confidence) > 0:
 			self.confidence.confidence = [self.confidence.confidence[target]]
 			self.confidence.confidenceRect = [self.confidence.confidenceRect[target]]
-			print "X:\t%i Y:\t%i W:\t%i H:\t%i" % (self.confidence.confidenceRect[0][0], self.confidence.confidenceRect[0][1], self.confidence.confidenceRect[0][2], self.confidence.confidenceRect[0][3])
+			if self.display: print "X:\t%i Y:\t%i W:\t%i H:\t%i" % (self.confidence.confidenceRect[0][0], self.confidence.confidenceRect[0][1], self.confidence.confidenceRect[0][2], self.confidence.confidenceRect[0][3])
 		else:
 			self.confidence.confidence = [0]
 		

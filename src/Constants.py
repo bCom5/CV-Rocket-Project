@@ -57,13 +57,13 @@ PHOTOS_CONTOUR_FILTER_CONSTANTS_2 = {
 }
 VIDEOS_CONTOUR_FILTER_CONSTANTS_1 = {
 # CLOSE FILTER
-	'minArea' : 5,
+	'minArea' : 40,
 	'maxArea' : 20000,
 	'minPerimeter' : 5,
 	'maxPerimeter' : 8000,
-	'minWidth' : 2,
+	'minWidth' : 8,
 	'maxWidth' : 1200,
-	'minHeight' : 3,
+	'minHeight' : 8,
 	'maxHeight' : 1200,
 	'minRatio' : 0.0,
 	'maxRatio' : 1000.0,
@@ -73,8 +73,8 @@ VIDEOS_CONTOUR_FILTER_CONSTANTS_1 = {
 	'maxSolidity' : 1000.0,
 	'minMean' : 0.0,
 	'maxMean' : 255.0,
-	'minVerticies' : 2,
-	'maxVerticies' : 10200,
+	'minVerticies' : 14,
+	'maxVerticies' : 16,
 	'minAngle' : -360.0,
 	'maxAngle' : 360.0,
 	'minRatioWidthtoSize' : 0.001,
@@ -106,9 +106,9 @@ VIDEOS_RGB_FILTER_CONSTANTS_1 = {
 	'rgbRedMin' : 90,
 	'rgbRedMax' : 255,
 	'rgbGreenMin' : 0,
-	'rgbGreenMax' : 70,
+	'rgbGreenMax' : 80,
 	'rgbBlueMin' : 0,
-	'rgbBlueMax' : 100
+	'rgbBlueMax' : 110
 }
 CONFIDENCE_TOLERANCE = 90 # 0-100
 CONFIDENCE_WINDOW_WIDTH = 50
