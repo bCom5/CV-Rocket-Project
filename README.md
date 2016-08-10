@@ -54,5 +54,19 @@ picamTest.py consists of a few key steps:
 6. Clears the current image so the camera can continue sampling
 7. When it ends, it outputs all the known information of time per frame and capture to the screen and to "cv/src/outputs.txt", where data from every test is collected.
 
+baselineCapture.py is a python script to determine maximum, minimum and average frame rates for various capture and filtering settings through the pi. It is extremely useful for testing capture and filtering speed. It consists of similar steps to picamTest.py but with more customization:
 
-That is essentially all that is needed to understand this code. If you have any questions, email me at adamznow@gmail.com.
+1. There are five values that can be changed prior to running the code:
+    1. controlFrames: Number of frames to capture before finishing. Default: 500
+    2. testCount: Number of tests to perform before finishing. Default: 3
+    3. wantedTestTypes: List of capture types to test in each test, use numbers 1-3 depending on the capture type as listed below. Default: [1,3]
+    4. filtering: Whether to filter every captured frame or not. Default: True
+    5. outputDir: The output file for all the known testing data. Default: "Notes.txt"
+2. There are three different capture types: Capture continuously (1), capture standard (2), and capture sequence (3).
+3. For every test, (given by testCount) the script will iterate through wantedTestTypes. So, with default settings, three tests will happen where two different ways of capturing are tested and 3000 frames in total will be captured instead of 1500 if it was just one capture method.
+4. After every capture method, the script will print out the test number, the capture type, the total frame rate, and the internal frame rate. This data is also stored into a temporary string.
+5. Pressing Ctrl-C at any time will end all further tests.
+6. At the end of the tests, all capture data will be written to outputDir.
+
+
+That is essentially all that is needed to understand this code. If you have any questions, please email me at adamznow@gmail.com.
