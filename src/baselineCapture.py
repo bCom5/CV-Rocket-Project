@@ -20,13 +20,13 @@ camera.stop_preview()
 
 out = ""
 time = 0
-
 numFrames = 0
+
 controlFrames = 500
-# capType = 3
 testCount = 3
 wantedTestTypes = [1,3]
 filtering = True
+outputDir = "Notes.txt"
 
 def outputs():
 	global numFrames, time
@@ -103,16 +103,18 @@ for i in range(testCount):
 			breaking = True
 		tot2 = cv2.getTickCount()
 		totalTime = (tot2-tot1) / cv2.getTickFrequency()
-		print "Test %i with settings %i: Captured %i frames at total fps of %.2f, with internal fps of %.2f." % (i, cType, numFrames, numFrames/totalTime, numFrames/time)
-		out += "Test %i with settings %i:\tCaptured %i frames at total fps of %.2f, with internal fps of %.2f.\n" % (i, cType, numFrames, numFrames/totalTime, numFrames/time)
+		# print "Test %i with settings %i: Captured %i frames at total fps of %.2f, with internal fps of %.2f. Saw a contour in %i frames." % (i, cType, numFrames, numFrames/totalTime, numFrames/time, goodFrames)
+		out += "Test %i with settings %i:\tCaptured %i frames at total fps of %.2f, with internal fps of %.2f. Saw a contour in %i frames.\n" % (i, cType, numFrames, numFrames/totalTime, numFrames/time, filt.contourCount)
 	if breaking:
+		print "BREAKING OUT"
 		break
 try:
-	f = open("Notes.txt", "r")
+	f = open(outputDir, "r")
 except:
-	f = open("Notes.txt", "w")
-	f.write("Notes.txt: A place to store data from various Baseline tests.")
+	f = open(outputDir, "w")
+	f.write(str(outputDir)+": A place to store data from various Baseline tests.")
 f.close()
-f = open("Notes.txt", "a")
+print out
+f = open(outputDir, "a")
 f.write(out)
 f.close()

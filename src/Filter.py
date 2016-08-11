@@ -20,6 +20,7 @@ class Filter:
 		self.allContours = [] # List of all contours and what they passed in terms of the filter
 		self.acceptedContours = [] # List of the indexes of the contours that passed the filter
 		self.confidence = Confidence()
+		self.contourCount = 0
 	def blur(self):
 		# Blurs the image, as well as makes it grayscale
 		grayimg = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY) # Converts image to grayscale
@@ -406,7 +407,8 @@ class Filter:
 		if len(self.confidence.confidence) > 0:
 			self.confidence.confidence = [self.confidence.confidence[target]]
 			self.confidence.confidenceRect = [self.confidence.confidenceRect[target]]
-			if self.display: print "X:\t%i Y:\t%i W:\t%i H:\t%i" % (self.confidence.confidenceRect[0][0], self.confidence.confidenceRect[0][1], self.confidence.confidenceRect[0][2], self.confidence.confidenceRect[0][3])
+			self.contourCount += 1
+			print "X:\t%i Y:\t%i W:\t%i H:\t%i" % (self.confidence.confidenceRect[0][0], self.confidence.confidenceRect[0][1], self.confidence.confidenceRect[0][2], self.confidence.confidenceRect[0][3])
 		else:
 			self.confidence.confidence = [0]
 		
@@ -428,4 +430,5 @@ class Filter:
 			#     #cv2.circle(image2,far,5,[255,0,255],-1)
 			# except AttributeError: # If it fails print it out
 			# 	if self.display: print "Attribute Failure!"
+
 		return image2 # Returns image with accepted contours drawn on it

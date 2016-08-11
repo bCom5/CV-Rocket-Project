@@ -1,3 +1,7 @@
 #!/bin/bash
-sudo cp /home/pi/*.py /home/pi/Documents/RocketProject/cv/src
-sudo cp /home/pi/*.pyc /home/pi/Documents/RocketProject/cv/src
+SRC=/Users/jmn/.virtualenvs/cv/src
+DST=root@192.168.1.2
+filename=${1:-$SRC}
+ip=${2:-$DST}
+ssh $ip mkdir /home/pi/Documents/RocketProject
+scp -r $filename $ip:/home/pi/Documents/RocketProject

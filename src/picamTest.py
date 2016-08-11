@@ -107,6 +107,7 @@ try:
 		filt.image = frame.array
 		filtered, imagey, contours, h = filt.rgbGet(cv2.CHAIN_APPROX_SIMPLE, Constants.VIDEOS_RGB_FILTER_CONSTANTS_1)
 		coolImage = filt.run(filt.image)
+		
 		capture.truncate(0)
 		capture.seek(0)
 
