@@ -13,16 +13,23 @@ If you are having problems logging into the pi, on the login screen press "CTRL+
 After a short delay, the PI will login.
 After logging in, copy over the entire repo (this repo) to the pi and place it in the Documents folder. You can name it whatever you want, but remember the name. Reccomended name would be RocketProject.
 Make sure inside the 'RocketProject' folder there are all the virtualenv scripts, as well as the cv folder.
-Most likely, when running the various scripts, you will encounter errors about cv2 and picamera. These modules need to be downloaded onto the PI. Instructions for this will be written soon.
+Most likely, when running the various scripts, you will encounter errors about cv2 and picamera. These modules need to be downloaded onto the PI. Instructions for this will be written soon. RESOLVED! PLEASE USE THIS INSTEAD OF INSTALLING THE MODULES AND PACKAGES YOURSELF!
+This repo now includes ALL of the modules that the PI runs, therefore, running the script at "cv/src/movetopi" will move the ENTIRE repo over to the PI (will take awhile only use this when copying the repo to a new PI). Will place the repo in /home/pi/Documents/RocketProject/. If there is no RocketProject folder, it will be created.
+There are 2 arguments that can be passed to movetopi.
+
+1. Source directory: The directory of the source files of the repo. Default: "/Users/jmn/.virtualenvs/cv"
+2. Destination usr@IP: The destination IP of the PI. Default: root@192.168.1.2
+
+For picamera, you can use sudo apt-get. (Picamera version 1.1)
+For Opencv, make sure you install the correct version (version 2.4.9.1).
+
 An easy command to run in a shell window which will run picamTest.py: 
 cd /home/pi/Documents/RocketProject/cv/src; source ../bin/activate; python picamTest.py
 In the future, this may be done on startup.
-For picamera, you can use sudo apt-get. (Picamera version 1.1)
-For Opencv, make sure you install the correct version (version 2.4.9.1).
-After running the shell script, go onto the computer and run the shell script at: "cv/src/copytopi" NOT TO BE CONFUSED WITH "cv/src/movetopi". There are 3 arguments that can be passed to movetopi.
+After the repo is setup, go onto the computer and run the shell script at: "cv/src/copytopi" NOT TO BE CONFUSED WITH "cv/src/movetopi". There are 3 arguments that can be passed to copytopi.
 
 1. Source directory: The directory of the source files to copy. Default: "/Users/jmn/.virtualenvs/cv/src"
-2. Destination usr@IP: The Destination IP of the PI: Default: "root@192.168.1.2:/hom/pi/Documents/RocketProject/cv/src"
+2. Destination usr@IP: The Destination IP of the PI. Default: "root@192.168.1.2:/hom/pi/Documents/RocketProject/cv/src"
 3. Filetype to copy: The extension of the file to copy to the pi. Default: "*.py"
 
 Filter.py consists of three filters:
