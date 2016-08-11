@@ -228,17 +228,14 @@ class Filter:
 				self.toleranceCheck(tol, index, x, y, w, h)
 				continue
 			tol += 1
-			#cv2.rectangle(image2, (x,y), (x+w,y+h), (0,255,0), 2)
 
 			# Angled Rect
-			"""
-			rect = cv2.minAreaRect(item)
-			box = cv2.boxPoints(rect)
-			box = np.int0(box)
-			cv2.drawContours(image2, [box], 0, (255,0,0), 2)
-			"""
+			# rect = cv2.minAreaRect(item)
+			# box = cv2.boxPoints(rect)
+			# box = np.int0(box)
 
 			# Circle
+
 			# (x,y), radius = cv2.minEnclosingCircle(item) # Expensive
 			# center = (int(x),int(y))
 			# radius = int(radius)
@@ -248,9 +245,6 @@ class Filter:
 				# Ellipse
 
 				if item.shape[0] > 5:
-					ellipse = cv2.fitEllipse(item)
-					#image2 = cv2.ellipse(image2, ellipse, (255,255,0), 2)
-
 					# Orientation
 					(ex,ey), (MA,ma), angle = cv2.fitEllipse(item)
 				else:
@@ -278,12 +272,12 @@ class Filter:
 				# [vx, vy, x, y] = cv2.fitLine(item, cv2.DIST_L2,0,0.01,0.01)
 				# lefty = int((-x*vy/vx) + y)
 				# righty = int(((cols-x)*vy/vx)+y)
-				# image2 = cv2.line(image2, (cols-1,righty),(0,lefty),(0,255,0),2)
 			except OverflowError:
 				# Line exists outside of the image, numbers are too small
 				pass
 
 			# Mean Color/Intensity
+
 			# mean = cv2.mean(image2, mask=mask) # Expensive
 			mean = [127.5]
 
@@ -292,17 +286,20 @@ class Filter:
 				self.toleranceCheck(tol, index, x, y, w, h)
 				continue
 			tol += 1
+
 			# Equivalent Diameter
+
 			# eD = np.sqrt(4*A/np.pi)
 			eD = 0
 
 			# Mask + Pixel Points
+
 			# grayimg = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
 			# mask = np.zeros(grayimg.shape,np.uint8) # Expensive
-			# cv2.drawContours(mask,[item],0,255,-1)
 			# pixelPoints = cv2.findNonZero(mask) # Expensive
 			mask = range(15)
 			pixelPoints = range(15)
+
 			tol += 1
 			if len(pixelPoints) < self.consts['minVerticies'] or len(pixelPoints) > self.consts['maxVerticies']:
 				self.toleranceCheck(tol, index, x, y, w, h)
@@ -310,11 +307,13 @@ class Filter:
 			tol += 1
 
 			# Maximum and Minimum
+
 			# min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(grayimg,mask=mask)
 			min_val, max_val, min_loc, max_loc = 0,0,0,0
 			
 
 			# Extreme Points
+
 			# leftMost = tuple(item[item[:,:,0].argmin()][0])
 			# rightMost = tuple(item[item[:,:,0].argmax()][0])
 			# topMost = tuple(item[item[:,:,1].argmin()][0])
@@ -324,53 +323,6 @@ class Filter:
 			self.saveable.image = image2
 			# SHOULD ALWAYS PASS THE TEST
 			self.toleranceCheck(tol, index, x, y, w, h)
-
-			# print index
-			# M = cv2.moments(item) # Moments matrix of the contour, everything the contour is
-
-			# try:
-			# 	# Center X
-			# 	cx = int(M['m10']/M['m00'])
-			# 	# Center Y
-			# 	cy = int(M['m01']/M['m00'])
-			# except ZeroDivisionError:
-			# 	# Area  is 0
-			# 	cx = 0
-			# 	cy = 0
-			# 	A = 1
-
-			# # Add to moments
-			# self.moments.append({
-			# 	'cx': x+w/2,
-			# 	'cy': y+h/2,
-			# 	'A': A,
-			# 	'P': P,
-			# 	'k': k,
-			# 	'w': w,
-			# 	'h': h,
-			# 	'x': x,
-			# 	'y': y,
-			# 	'hull': hull,
-			# 	'ratio': aspect_ratio,
-			# 	'extent': extent,
-			# 	'solidity': solidity,
-			# 	'eD': eD,
-			# 	'angle': angle,
-			# 	'majorAxis': MA,
-			# 	'minorAxis': ma,
-			# 	'mask': mask,
-			# 	'pixelPoints': pixelPoints,
-			# 	'maxVal': max_val,
-			# 	'maxLocation': max_loc,
-			# 	'minVal': min_val,
-			# 	'minLocation': min_loc,
-			# 	'mean': mean,
-			# 	'leftMost': leftMost,
-			# 	'rightMost': rightMost,
-			# 	'topMost': topMost,
-			# 	'bottomMost': bottomMost
-			# 	}) # The dictionary of all the contour information- most time consuming, but is not nescessary
-			# # Not all of the information is currently used, jsut there for reference
 
 			if self.display:
 				# Don't display anything because video feeds make it annoyingly slow (when displaying stuff in this loop)
@@ -412,23 +364,7 @@ class Filter:
 		else:
 			self.confidence.confidence = [0]
 		
-		# print len(self.contours)
 		for item in self.acceptedContours:
 			# print item,
 			cv2.drawContours(image2, [self.contours[item]], -1, color, 3) # Draw the accepted contours
-			# try:
-			# 	defects = cv2.convexityDefects(self.contours[item],self.moments[item]['hull']) # Try to draw the convex hull
-			# except:
-			# 	defects = cv2.convexityDefects(self.contours[item],cv2.convexHull(self.contours[item],returnPoints=False)) # Otherwise, tries with a reobtaining of the hull
-			# try:
-			# 	for i in range(defects.shape[0]): # Tries to draw the defects of the convex hull
-			# 	    s,e,f,d = defects[i,0]
-			# 	    start = tuple(self.contours[item][s][0])
-			# 	    end = tuple(self.contours[item][e][0])
-			# 	    far = tuple(self.contours[item][f][0])
-			# 	    cv2.line(image2,start,end,[0,255,255],2)
-			#     #cv2.circle(image2,far,5,[255,0,255],-1)
-			# except AttributeError: # If it fails print it out
-			# 	if self.display: print "Attribute Failure!"
-
 		return image2 # Returns image with accepted contours drawn on it

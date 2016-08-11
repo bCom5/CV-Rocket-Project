@@ -4,6 +4,7 @@ import picamera.array
 import cv2
 import Constants
 import numpy as np
+import io
 from Filter import Filter as f
 
 camera = picamera.PiCamera()
@@ -35,94 +36,75 @@ imgs = [
 "img/images-6.jpg"
 ]
 
+numFrames = 0
+time = 0
+
 outputDir = "/home/pi/Documents/RocketProject/cv/src/outputs.txt"
 doOutput = True
-
-numFrames = 0
 controlFrames = 5000 # Used to stop at a certain number of frames
-time = 0
 waitDelay = 1
+capType = 2
 
-"""
-try:
-	tot1 = cv2.getTickCount()
-	if controlFrames != 0:
-		goFrames = controlFrames
-	else:
-		goFrames = 1000000
-	for frame in range(goFrames):
-		e1 = cv2.getTickCount()
-
-		camera.capture(capture, format='bgr')
-		filt.image = capture.array
-		filtered, imagey, contours, h = filt.rgbGet(cv2.CHAIN_APPROX_SIMPLE, Constants.VIDEOS_RGB_FILTER_CONSTANTS_1)
-		coolImage = filt.run(filt.image)
-		capture.truncate(0)
-
-		e2 = cv2.getTickCount()
-		time += (e2 - e1) / cv2.getTickFrequency()
-except KeyboardInterrupt:
-	pass
-"""
 camera.start_preview()
 t.sleep(5)
 camera.stop_preview()
 
+def outputs():
+	global numFrames, time
+	stream = io.BytesIO()
+	for i in range(controlFrames):
+        # This returns the stream for the camera to capture to
+		
+		yield stream
+		stream.seek(0)
 
-"""
-while True:
-	camera.capture(capture, format='bgr')
-	e1 = cv2.getTickCount()
-	cv2.imshow('frame', capture.array)
-	cv2.waitKey(1)
-	capture.truncate(0)
-	e2 = cv2.getTickCount()
-	time += (e2 - e1) / cv2.getTickFrequency()
-	numFrames += 1
-	if controlFrames != 0 and numFrames >= controlFrames:
-		break
+		data = np.fromstring(stream.getvalue(), dtype=np.uint8)
+		open_cv_image = cv2.imdecode(data, 1)
 
-"""
-"""
-tot1 = cv2.getTickCount()
-for frame in camera.capture_continuous(capture, format='bgr', use_video_port=True):
-	e1 = cv2.getTickCount()
-	cv2.imshow('frame', capture.array)
-	cv2.waitKey(1)
-	capture.truncate(0)
-	e2 = cv2.getTickCount()
-	time += (e2 - e1) / cv2.getTickFrequency()
-	numFrames += 1
-	if controlFrames != 0 and numFrames >= controlFrames:
-		break
-"""
+		e1 = cv2.getTickCount()
+
+		if filtering:
+			filt.image = open_cv_image
+			f, imagey, c, h = filt.rgbGet(cv2.CHAIN_APPROX_SIMPLE, Constants.VIDEOS_RGB_FILTER_CONSTANTS_1)
+			output = filt.run(filt.image)
+
+		numFrames += 1
+
+		stream.seek(0)
+		stream.truncate()
+
+		e2 = cv2.getTickCount()
+		time += (e2-e1)/cv2.getTickFrequency()
 
 try:
 	tot1 = cv2.getTickCount()
-	for frame in camera.capture_continuous(capture, format='bgr', use_video_port=True):
-		e1 = cv2.getTickCount() # Starttime
+	if capType == 1:
+		for frame in camera.capture_continuous(capture, format='bgr', use_video_port=True):
+			e1 = cv2.getTickCount() # Starttime
 
-		# AREA OF INTEREST
-		# for i in range(500):
-		filt.image = frame.array
-		filtered, imagey, contours, h = filt.rgbGet(cv2.CHAIN_APPROX_SIMPLE, Constants.VIDEOS_RGB_FILTER_CONSTANTS_1)
-		coolImage = filt.run(filt.image)
-		
-		capture.truncate(0)
-		capture.seek(0)
+			# AREA OF INTEREST
+			# for i in range(500):
+			filt.image = frame.array
+			filtered, imagey, contours, h = filt.rgbGet(cv2.CHAIN_APPROX_SIMPLE, Constants.VIDEOS_RGB_FILTER_CONSTANTS_1)
+			coolImage = filt.run(filt.image)
 
-		cv2.imshow('frameN', coolImage)
-		key = cv2.waitKey(waitDelay)
-		
-		# if key == ord('q'):
-		# 	break
+			capture.truncate(0)
+			capture.seek(0)
 
-		e2 = cv2.getTickCount()
-		time += (e2 - e1) / cv2.getTickFrequency()
-		numFrames += 1
+			cv2.imshow('frameN', coolImage)
+			key = cv2.waitKey(waitDelay)
+			
+			# if key == ord('q'):
+			# 	break
 
-		if controlFrames != 0 and numFrames >= controlFrames:
-			break
+			e2 = cv2.getTickCount()
+			time += (e2 - e1) / cv2.getTickFrequency()
+			numFrames += 1
+
+			if controlFrames != 0 and numFrames >= controlFrames:
+				break
+	elif capType == 2:
+		camera.capture_sequence(outputs(), 'jpeg', use_video_port=True)
 except KeyboardInterrupt:
 	pass
 
