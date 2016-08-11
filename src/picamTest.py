@@ -105,6 +105,8 @@ try:
 				break
 	elif capType == 2:
 		camera.capture_sequence(outputs(), 'jpeg', use_video_port=True)
+	else:
+		raise TypeError("Incorrect capType! capType can only be between 1 and 2. capType=%i" % (capType))
 except KeyboardInterrupt:
 	pass
 
