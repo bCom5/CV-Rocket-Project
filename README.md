@@ -14,6 +14,9 @@ After a short delay, the PI will login.
 After logging in, copy over the entire repo (this repo) to the pi and place it in the Documents folder. You can name it whatever you want, but remember the name. Reccomended name would be RocketProject.
 Make sure inside the 'RocketProject' folder there are all the virtualenv scripts, as well as the cv folder.
 Most likely, when running the various scripts, you will encounter errors about cv2 and picamera. These modules need to be downloaded onto the PI. Instructions for this will be written soon.
+An easy command to run in a shell window which will run picamTest.py: 
+cd /home/pi/Documents/RocketProject/cv/src; source ../bin/activate; python picamTest.py
+In the future, this may be done on startup.
 For picamera, you can use sudo apt-get. (Picamera version 1.1)
 For Opencv, make sure you install the correct version (version 2.4.9.1).
 After running the shell script, go onto the computer and run the shell script at: "cv/src/copytopi" NOT TO BE CONFUSED WITH "cv/src/movetopi". There are 3 arguments that can be passed to movetopi.
