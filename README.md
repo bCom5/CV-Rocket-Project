@@ -13,13 +13,23 @@ If you are having problems logging into the pi, on the login screen press "CTRL+
 After a short delay, the PI will login.
 After logging in, copy over the entire repo (this repo) to the pi and place it in the Documents folder. You can name it whatever you want, but remember the name. Reccomended name would be RocketProject.
 Make sure inside the 'RocketProject' folder there are all the virtualenv scripts, as well as the cv folder.
-Most likely, when running the various scripts, you will encounter errors about cv2 and picamera. These modules need to be downloaded onto the PI. Instructions for this will be written soon.
+Most likely, when running the various scripts, you will encounter errors about cv2 and picamera. These modules need to be downloaded onto the PI. Instructions for this will be written soon. RESOLVED! PLEASE USE THIS INSTEAD OF INSTALLING THE MODULES AND PACKAGES YOURSELF!
+This repo now includes ALL of the modules that the PI runs, therefore, running the script at "cv/src/movetopi" will move the ENTIRE repo over to the PI (will take awhile only use this when copying the repo to a new PI). Will place the repo in /home/pi/Documents/RocketProject/. If there is no RocketProject folder, it will be created.
+There are 2 arguments that can be passed to movetopi.
+
+1. Source directory: The directory of the source files of the repo. Default: "/Users/jmn/.virtualenvs/cv"
+2. Destination usr@IP: The destination IP of the PI. Default: root@192.168.1.2
+
 For picamera, you can use sudo apt-get. (Picamera version 1.1)
 For Opencv, make sure you install the correct version (version 2.4.9.1).
-After running the shell script, go onto the computer and run the shell script at: "cv/src/copytopi" NOT TO BE CONFUSED WITH "cv/src/movetopi". There are 3 arguments that can be passed to movetopi.
+
+An easy command to run in a shell window which will run picamTest.py: 
+cd /home/pi/Documents/RocketProject/cv/src; source ../bin/activate; python picamTest.py
+In the future, this may be done on startup.
+After the repo is setup, go onto the computer and run the shell script at: "cv/src/copytopi" NOT TO BE CONFUSED WITH "cv/src/movetopi". There are 3 arguments that can be passed to copytopi.
 
 1. Source directory: The directory of the source files to copy. Default: "/Users/jmn/.virtualenvs/cv/src"
-2. Destination usr@IP: The Destination IP of the PI: Default: "root@192.168.1.2:/hom/pi/Documents/RocketProject/cv/src"
+2. Destination usr@IP: The Destination IP of the PI. Default: "root@192.168.1.2:/hom/pi/Documents/RocketProject/cv/src"
 3. Filetype to copy: The extension of the file to copy to the pi. Default: "*.py"
 
 Filter.py consists of three filters:
@@ -54,5 +64,19 @@ picamTest.py consists of a few key steps:
 6. Clears the current image so the camera can continue sampling
 7. When it ends, it outputs all the known information of time per frame and capture to the screen and to "cv/src/outputs.txt", where data from every test is collected.
 
+baselineCapture.py is a python script to determine maximum, minimum and average frame rates for various capture and filtering settings through the pi. It is extremely useful for testing capture and filtering speed. It consists of similar steps to picamTest.py but with more customization:
 
-That is essentially all that is needed to understand this code. If you have any questions, email me at adamznow@gmail.com.
+1. There are five values that can be changed prior to running the code:
+    1. controlFrames: Number of frames to capture before finishing. Default: 500
+    2. testCount: Number of tests to perform before finishing. Default: 3
+    3. wantedTestTypes: List of capture types to test in each test, use numbers 1-3 depending on the capture type as listed below. Default: [1,3]
+    4. filtering: Whether to filter every captured frame or not. Default: True
+    5. outputDir: The output file for all the known testing data. Default: "Notes.txt"
+2. There are three different capture types: Capture continuously (1), capture standard (2), and capture sequence (3).
+3. For every test, (given by testCount) the script will iterate through wantedTestTypes. So, with default settings, three tests will happen where two different ways of capturing are tested and 3000 frames in total will be captured instead of 1500 if it was just one capture method.
+4. After every capture method, the script will print out the test number, the capture type, the total frame rate, and the internal frame rate. This data is also stored into a temporary string.
+5. Pressing Ctrl-C at any time will end all further tests.
+6. At the end of the tests, all capture data will be written to outputDir.
+
+
+That is essentially all that is needed to understand this code. If you have any questions, please email me at adamznow@gmail.com.
