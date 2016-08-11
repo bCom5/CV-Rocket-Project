@@ -9,6 +9,7 @@ If you get an error complaining about 'cv2', you need to download opencv onto yo
 
 To build and run the code on the PI: Plug the PI in to the computer with the source code on it.
 On the pi, run the shell script at "/home/pi/piip". THIS MUST BE DONE BEFORE YOU CAN SSH OR SCP TO THE PI.
+NOTE: IT IS RECCOMENDED TO RUN THIS SCRIPT ON STARTUP SO YOU DO NOT NEED TO PLUG THE PI INTO A DISPLAY BEFORE SSHing TO IT.
 If you are having problems logging into the pi, on the login screen press "CTRL+FN+F1" then type: "sudo startx"
 After a short delay, the PI will login.
 After logging in, copy over the entire repo (this repo) to the pi and place it in the Documents folder. You can name it whatever you want, but remember the name. Reccomended name would be RocketProject.
