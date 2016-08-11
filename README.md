@@ -20,6 +20,8 @@ There are 2 arguments that can be passed to movetopi.
 1. Source directory: The directory of the source files of the repo. Default: "/Users/jmn/.virtualenvs/cv"
 2. Destination usr@IP: The destination IP of the PI. Default: root@192.168.1.2
 
+NOTE: OPENCV MAY NOT WORK IN THIS REPO, IF IT DOES NOT, FOLLOW THE INSTRUCTIONS ONLINE TO DOWNLOAD OPENCV VERSION 2.4.9.1.
+
 For picamera, you can use sudo apt-get. (Picamera version 1.1)
 For Opencv, make sure you install the correct version (version 2.4.9.1).
 
